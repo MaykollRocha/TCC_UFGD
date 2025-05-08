@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -13,11 +12,9 @@
     <link rel="stylesheet" href="/static/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/css/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/static/css/bootstrap-select.min.css">
-    <link rel="stylesheet" href="/static/css/datatables.min.css">
     <link rel="stylesheet" href="/static/css/sweetalert2.min.css">
     <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
     <link rel="stylesheet" href="/static/css/jquery.toast.min.css">
-    <link rel="stylesheet" href="/static/css/kalendae.css">
     <link rel="stylesheet" href="/static/css/leaflet.css">
     <link rel="stylesheet" href="/static/css/richtext.min.css">
     <link rel="stylesheet" href="/static/css/fontawesome-all.min.css">
@@ -31,10 +28,7 @@
     <script src="/static/js/jquery.toast.min.js"></script>
     <script src="/static/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/bootstrap-select.min.js"></script>
-    <script src="/static/js/datatables.min.js"></script>
     <script src="/static/js/sweetalert2.min.js"></script>
-    <script src="/static/js/moment-with-locales.min.js"></script>
-    <script src="/static/js/kalendae.min.js"></script>
     <script src="/static/js/leaflet.js"></script>
     <script src="/static/js/fontawesome-all.min.js"></script>
     <script src="/static/js/popper.min.js"></script>
@@ -93,36 +87,38 @@
                 Nome Projeto
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu"
-                aria-controls="navbarMenu" aria-expanded="false" aria-label="Alternar navega  o">
+                aria-controls="navbarMenu" aria-expanded="false" aria-label="Alternar navegação">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <?php
             include_once __DIR__ . '/../../config/menu.php'; // caminho relativo para o arquivo de menu
             ?>
 
-            <ul class="navbar-nav ms-auto">
-                <?php foreach ($menu as $url => $nome) { ?>
-                    <?php if (is_array($nome)) { ?>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown<?= $url ?>" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <?= $url ?>
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown<?= $url ?>">
-                                <?php foreach ($nome as $Url => $Nome) { ?>
-                                    <li><a class="dropdown-item" href="<?= $Url ?>"><?= $Nome ?></a></li>
-                                <?php }; ?>
-                            </ul>
-                        </li>
-                    <?php } else { ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= $url ?>"><?= $nome ?></a>
-                        </li>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarMenu">
+                <ul class="navbar-nav">
+                    <?php foreach ($menu as $url => $nome) { ?>
+                        <?php if (is_array($nome)) { ?>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown<?= $url ?>" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <?= $url ?>
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdown<?= $url ?>">
+                                    <?php foreach ($nome as $Url => $Nome) { ?>
+                                        <li><a class="dropdown-item" href="<?= $Url ?>"><?= $Nome ?></a></li>
+                                    <?php }; ?>
+                                </ul>
+                            </li>
+                        <?php } else { ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?= $url ?>"><?= $nome ?></a>
+                            </li>
+                        <?php }; ?>
                     <?php }; ?>
-                <?php }; ?>
-            </ul>
+                </ul>
+            </div>
         </div>
     </nav>
 
     <!-- Conte do principal -->
     <main class="flex-shrink-0">
-        <div class="container-fluid px-1">
+        <div class="container-fluid">

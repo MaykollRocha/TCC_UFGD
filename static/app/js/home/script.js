@@ -1,1 +1,1 @@
-$(function() { console.log('Home carregado'); });
+$(function() {});

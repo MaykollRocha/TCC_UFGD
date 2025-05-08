@@ -16,7 +16,9 @@
  */
 $menu = [
     '/'          => 'Página Inicial',
-    '/karatsuba' => 'Karatsuba',
-    '/toomcook3' => 'Toom Cook 3',
+    'Karatsuba' => [
+        '/karatsuba' => 'Info',
+        '/KaratsubaCaminhoCalculadora' => 'Depurador do Código',
+    ],
 ];
 

@@ -32,29 +32,27 @@ class ControllerCreator
         $this->createDir($jsDir);
 
         // Conteúdos
-        $controllerContent = <<<PHP
-<?php
+        $controllerContent = "<?php
 
-require_once 'application/core/Controller.php';
+        require_once 'application/core/Controller.php';
 
-class {$this->name} extends Controller
-{
-    public function index()
-    {
-        \$this->render('{$this->folder}/index');
-    }
-}
-PHP;
+        class {$this->name} extends Controller
+        {
+            public function index()
+            {
+                \$this->render('{$this->folder}/index');
+            }
+        }
+        ";
 
-        $viewContent = <<<HTML
-<link rel="stylesheet" href="/static/app/css/{$this->folder}/styles.css">
-<script src="/static/app/js/{$this->folder}/script.js"></script>
+        $viewContent = '
+        <link rel="stylesheet" href="/static/app/css/{$this->folder}/styles.css">
+        <script src="/static/app/js/{$this->folder}/script.js"></script>
 
-<h1>Bem-vindo ao {$this->name}</h1>
-HTML;
+        <h1>Bem-vindo ao {$this->name}</h1>';
 
-        $cssContent = "/* Estilos para {$this->name} */";
-        $jsContent = "$(function() { console.log('{$this->name} carregado'); });";
+        $cssContent = "";
+        $jsContent = "$(function() {});";
 
         // Criar arquivos
         file_put_contents($controllerPath, $controllerContent);
