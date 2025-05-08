@@ -1,0 +1,24 @@
+.intro-text {
+  padding: 20px 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+.intro-text h2 {
+  margin-top: 0;
+  color: #0056b3;
+  font-size: 28px;
+}
+
+.intro-text h3 {
+  color: #007BFF;
+  margin-top: 25px;
+  font-size: 22px;
+}
+
+.intro-text p {
+  margin-bottom: 15px;
+  font-size: 16px;
+  text-align: justify;
+}
