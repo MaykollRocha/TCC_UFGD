@@ -146,13 +146,13 @@ $(function () {
         const result = parte1 + parte2 + parte3;
         
         highlightLine('linha8');
-        const $H = await adicionarEtapa($detalhes, `H_${nivel}`, `H = G - E - F`, 500);
+        const $H = await adicionarEtapa($detalhes, `H_${nivel}`, `H \\gets G - E - F`, 500);
         $H.html(`\\(H \\gets ${H}\\)`); await MathJax.typesetPromise([$H[0]]); await delay(400);
     
         highlightLine('linha9');
-        await adicionarEtapa($detalhes, '', `R = (${E} \\times 10^{${2 * q}}) + (${H} \\times 10^{${q}}) + ${F}`);
-        await adicionarEtapa($detalhes, '', `${parte1} + ${parte2} + ${parte3} = ${result}`);
-    
+        const $R = await adicionarEtapa($detalhes, `H_${nivel}`, `R \\gets (${E} \\times 10^{${2 * q}}) + (${H} \\times 10^{${q}}) + ${F}`, 500);
+        $R.html(`\\(R \\gets ${parte1} + ${parte2} + ${parte3}\\)`); await MathJax.typesetPromise([$R[0]]); await delay(400);
+
         highlightLine('linha10');
         $resultado.html(`\\(Resultado = ${result}\\)`);
         await MathJax.typesetPromise([$resultado[0]]);

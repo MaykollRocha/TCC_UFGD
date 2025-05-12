@@ -47,13 +47,13 @@
         </form>
     </div>
 
-    <div class="col-9 bg-primary text-white p-3 d-flex align-items-center justify-content-center" id="quadrado-container">
+    <div class="col-8 bg-primary text-white p-3 d-flex align-items-center justify-content-center" id="quadrado-container">
         <div id="karatsuba-visual" class="w-100">
             <div id="etapas-container" class="karatsuba-cards p-3"></div>
         </div>
     </div>
 
-    <div class="col-3 bg-secondary text-white p-1 d-flex align-items-center justify-content-center">
+    <div class="col-4 bg-secondary text-white p-1 d-flex align-items-center justify-content-center">
         <table class="table-bordered text-white">
             <thead>
                 <tr>
