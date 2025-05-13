@@ -45,11 +45,11 @@ class ControllerCreator
         }
         ";
 
-        $viewContent = '
+        $viewContent = `
         <link rel="stylesheet" href="/static/app/css/{$this->folder}/styles.css">
         <script src="/static/app/js/{$this->folder}/script.js"></script>
 
-        <h1>Bem-vindo ao {$this->name}</h1>';
+        <h1>Bem-vindo ao {$this->name}</h1>`;
 
         $cssContent = "";
         $jsContent = "$(function() {});";
