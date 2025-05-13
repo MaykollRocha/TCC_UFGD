@@ -20,5 +20,8 @@ $menu = [
         '/karatsuba' => 'Info',
         '/KaratsubaCaminhoCalculadora' => 'Depurador do Código',
     ],
+    'ToomCook' => [
+        '/toomCook' => 'Info',
+    ],
 ];
 
