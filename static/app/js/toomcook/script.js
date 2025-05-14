@@ -232,24 +232,31 @@ function toomCook3(x, y) {
 
 
     const buildToomTree = async () => {
-        const x = parseInt($("#mult1").val());
-        const y = parseInt($("#mult2").val());
-        const $tree = $("#tree");
-        const $lines = $("#lines");
+        const xInput = $("#mult1").val();
+        const yInput = $("#mult2").val();
+        if ($('#toomcook-form').hasClass('was-validated') &&  (xInput) && (yInput)) {
+            console.log(`xInput: ${xInput}`);
+            console.log(`yInput: ${yInput}`);
+            $('#toomcook-form').removeClass('was-validated');
 
-        $tree.html("");
-        $lines.html("");
-        nodeId = 0;
+            const x = BigInt(xInput);
+            const y = BigInt(yInput);
+            const $tree = $("#tree");
+            const $lines = $("#lines");
 
-        if (isNaN(x) || isNaN(y)) {
-            alert("Por favor, insira dois números inteiros válidos.");
-            return;
+            $tree.html("");
+            $lines.html("");
+            nodeId = 0;
+
+            await sleep(DELAY);
+            await toomCook3Visual(x, y, $tree);
+            await sleep(DELAY);
+            await drawLines();
+
+        } else {
+            $('#toomcook-form').addClass('was-validated');
         }
 
-        await sleep(DELAY);
-        await toomCook3Visual(x, y, $tree);
-        await sleep(DELAY);
-        await drawLines();
     };
 
     $("#buildBtn").on("click", buildToomTree);
