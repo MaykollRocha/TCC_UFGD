@@ -47,10 +47,248 @@
     </div>
 
     <div class="col-md-8 bg-primary text-white p-3 d-flex align-items-center justify-content-center" id="quadrado-container">
-        <div id="tree-container">
+        <!-- <div id="tree-container">
             <svg id="lines"></svg>
             <div id="tree"></div>
+        </div> -->
+        <div id="toom-visual" class="w-100">
+            <div id="etapas-container" class="toom-cards p-3">
+                <div class="d-flex flex-row gap-3 justify-content-center">
+                    <!-- Coluna X -->
+                    <table class="table table-bordered align-middle text-center">
+                        <thead>
+                            <tr>
+                                <th>X</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>0</th>
+                            </tr>
+                            <tr>
+                                <th>1</th>
+                            </tr>
+                            <tr>
+                                <th>-1</th>
+                            </tr>
+                            <tr>
+                                <th>-2</th>
+                            </tr>
+                            <tr>
+                                <th>inf</th>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- p(x) = ax² + bx + c -->
+                    <table class="table table-bordered align-middle text-center">
+                        <thead>
+                            <tr>
+                                <th colspan="3">p(x) = ax² + bx + c</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th id="p0c"></th>
+                                <th id="p0b"></th>
+                                <th id="p0a"></th>
+                            </tr>
+                            <tr>
+                                <th id="p1c"></th>
+                                <th id="p1b"></th>
+                                <th id="p1a"></th>
+                            </tr>
+                            <tr>
+                                <th id="p_1c"></th>
+                                <th id="p_1b"></th>
+                                <th id="p_1a"></th>
+                            </tr>
+                            <tr>
+                                <th id="p_2c"></th>
+                                <th id="p_2b"></th>
+                                <th id="p_2a"></th>
+                            </tr>
+                            <tr>
+                                <th id="pinfc"></th>
+                                <th id="pinfb"></th>
+                                <th id="pinfa"></th>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- q(x) = ax² + bx + c -->
+                    <table class="table table-bordered align-middle text-center">
+                        <thead>
+                            <tr>
+                                <th colspan="3">q(x) = ax² + bx + c</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th id="q0c"></th>
+                                <th id="q0b"></th>
+                                <th id="q0a"></th>
+                            </tr>
+                            <tr>
+                                <th id="q1c"></th>
+                                <th id="q1b"></th>
+                                <th id="q1a"></th>
+                            </tr>
+                            <tr>
+                                <th id="q_1c"></th>
+                                <th id="q_1b"></th>
+                                <th id="q_1a"></th>
+                            </tr>
+                            <tr>
+                                <th id="q_2c"></th>
+                                <th id="q_2b"></th>
+                                <th id="q_2a"></th>
+                            </tr>
+                            <tr>
+                                <th id="qinfc"></th>
+                                <th id="qinfb"></th>
+                                <th id="qinfa"></th>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- r(x) = resultado da multiplicação -->
+                    <table class="table table-bordered align-middle text-center">
+                        <thead>
+                            <tr>
+                                <th colspan="5">r(x) = resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th id="r0"></th>
+                            </tr>
+                            <tr>
+                                <th id="r1"></th>
+                            </tr>
+                            <tr>
+                                <th id="r_1"></th>
+                            </tr>
+                            <tr>
+                                <th id="r_2"></th>
+                            </tr>
+                            <tr>
+                                <th id="r_inf"></th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p style="color:black">Interpolação</p>
+                <div class="d-flex flex-row gap-3 justify-content-center">
+
+                    <!-- Coluna r(X) -->
+                    <table class="table table-bordered align-middle text-center">
+                        <thead>
+                            <tr>
+                                <th>r(X)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th id="r0"></th>
+                            </tr>
+                            <tr>
+                                <th id="r1"></th>
+                            </tr>
+                            <tr>
+                                <th id="r_1"></th>
+                            </tr>
+                            <tr>
+                                <th id="r_2"></th>
+                            </tr>
+                            <tr>
+                                <th id="r_inf"></th>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- p(x) = ax² + bx + c (agora com coeficientes para polinômios interpolados de grau 4) -->
+                    <table class="table table-bordered align-middle text-center">
+                        <thead>
+                            <tr>
+                                <th colspan="5">p(x) = ax⁴ + bx³ + cx² + dx + e</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th id="p0e"></th>
+                                <th id="p0d"></th>
+                                <th id="p0c"></th>
+                                <th id="p0b"></th>
+                                <th id="p0a"></th>
+                            </tr>
+                            <tr>
+                                <th id="p1e"></th>
+                                <th id="p1d"></th>
+                                <th id="p1c"></th>
+                                <th id="p1b"></th>
+                                <th id="p1a"></th>
+                            </tr>
+                            <tr>
+                                <th id="p_1e"></th>
+                                <th id="p_1d"></th>
+                                <th id="p_1c"></th>
+                                <th id="p_1b"></th>
+                                <th id="p_1a"></th>
+                            </tr>
+                            <tr>
+                                <th id="p_2e"></th>
+                                <th id="p_2d"></th>
+                                <th id="p_2c"></th>
+                                <th id="p_2b"></th>
+                                <th id="p_2a"></th>
+                            </tr>
+                            <tr>
+                                <th id="pinfe"></th>
+                                <th id="pinfd"></th>
+                                <th id="pinfc"></th>
+                                <th id="pinfb"></th>
+                                <th id="pinfa"></th>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Vetor de coeficientes finais rn -->
+                    <table class="table table-bordered align-middle text-center">
+                        <thead>
+                            <tr>
+                                <th>rn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th id="rn0"></th>
+                            </tr>
+                            <tr>
+                                <th id="rn1"></th>
+                            </tr>
+                            <tr>
+                                <th id="rn2"></th>
+                            </tr>
+                            <tr>
+                                <th id="rn3"></th>
+                            </tr>
+                            <tr>
+                                <th id="rn4"></th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p style="color: black;">Polinômio produto</p>
+                <p>r(x) = r0 + r1 x + r2 x² + r3 x³ + r4 x⁴</p>
+
+                <p style="color: black;">Recomposição x = base</p>
+                <p>r(x) = r0 + r1 x + r2 x² + r3 x³ + r4 x⁴</p>
+            </div>
         </div>
+
     </div>
 
     <div class="col-md-4 bg-secondary text-white p-3 d-flex align-items-center justify-content-center">
