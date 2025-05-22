@@ -1,266 +1,258 @@
 $(function () {
-    /**
-     * function splitNumber(number, nParts, i) {
-    let base = Math.pow(10, i);
-    let parts = [];
-    for (let j = 0; j < nParts - 1; j++) {
-        parts.push(number % base);
-        number = Math.floor(number / base);
-    }
-    parts.push(number);
-    return parts.reverse();
-}
-
-function toomCook3(x, y) {
-    let i = Math.max(Math.floor(Math.log10(x) / 3), Math.floor(Math.log10(y) / 3)) + 1;
-    console.log(`i: ${i}`);
-    
-    // Dividir os números em 3 partes
-    const nParts = 3;
-    let X = splitNumber(x, nParts, i);
-    let Y = splitNumber(y, nParts, i);
-    
-    console.log(`X: ${X}`);
-    console.log(`Y: ${Y}`);
-    
-    // Avaliar os pontos
-    let p0 = X[2];
-    let p1 = X[2] + X[1] + X[0];
-    let p_1 = X[2] - X[1] + X[0];
-    let p_2 = X[2] - X[1] * 2 + 4 * X[0];
-    let pInf = X[0];
-
-    let q0 = Y[2];
-    let q1 = Y[2] + Y[1] + Y[0];
-    let q_1 = Y[2] - Y[1] + Y[0];
-    let q_2 = Y[2] - Y[1] * 2 + 4 * Y[0];
-    let qInf = Y[0];
-    
-    console.log(`p0: ${p0}, p1: ${p1}, p_1: ${p_1}, p_2: ${p_2}, pInf: ${pInf}`);
-    console.log(`q0: ${q0}, q1: ${q1}, q_1: ${q_1}, q_2: ${q_2}, qInf: ${qInf}`);
-    
-    // Multiplicar os pontos
-    let r0 = p0 * q0;
-    let r1 = p1 * q1;
-    let r_1 = p_1 * q_1;
-    let r_2 = p_2 * q_2;
-    let rInf = pInf * qInf;
-    
-    console.log(`r0: ${r0}, r1: ${r1}, r_1: ${r_1}, r_2: ${r_2}, rInf: ${rInf}`);
-    
-    // Interpolação
-    let a0 = r0;
-    let a4 = rInf;
-    let a3 = (r_2 - r1) / 3;
-    let a1 = (r1 - r_1) / 2;
-    let a2 = r_1 - r0;
-    
-    a3 = ((a2 - a3) / 2) + 2 * rInf;
-    a2 = a2 + a1 - a4;
-    a1 = a1 - a3;
-    
-    console.log(`a0: ${a0}, a1: ${a1}, a2: ${a2}, a3: ${a3}, a4: ${a4}`);
-    
-    // Recombinação
-    let base = Math.pow(10, i);
-    console.log(`base: ${base}`);
-
-    let result = BigInt(a4) * BigInt(Math.pow(base, 4)) + 
-                 BigInt(a3) * BigInt(Math.pow(base, 3)) + 
-                 BigInt(a2) * BigInt(Math.pow(base, 2)) + 
-                 BigInt(a1) * BigInt(base) + 
-                 BigInt(a0);
-    
-    return result.toString();
-}
-     */
     const DELAY = 300;
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    let nodeId = 0;
+    const steps = [];
 
-    const newNodeElement = async (label, parentId = null) => {
-        const element = $(
-            `<div class="node-wrapper">
-          <div class="node" ${parentId ? `data-parent-id="${parentId}"` : ''}>
-            <div class="box">
-              <div class="top">${label}</div>
-              <div class="middle"></div>
-              <div class="bottom"></div>
-            </div>
-          </div>
-        </div>`
-        );
-        await sleep(DELAY);
-        return element;
-    };
+    function addStep(desc, matrices) {
+        // matrices: objeto { nomeDaMatriz: matrizArrayBidimensional }
+        steps.push({ desc, matrices });
+    }
 
-    const drawLines = async () => {
-        const $svg = $("#lines");
-        $svg.html("");
-
-        const parentChildPairs = $(".node[data-parent-id]");
-        for (const child of parentChildPairs) {
-            const $child = $(child);
-            const parentId = $child.attr("data-parent-id");
-            const $parent = $(`#${parentId}`);
-            if (!$parent.length) continue;
-
-            const svgRect = $svg[0].getBoundingClientRect();
-            const parentRect = $parent[0].getBoundingClientRect();
-            const childRect = $child[0].getBoundingClientRect();
-
-            $svg.attr("width", svgRect.width);
-            $svg.attr("height", svgRect.height);
-
-            const x1 = parentRect.left + parentRect.width / 2 - svgRect.left;
-            const y1 = parentRect.bottom - svgRect.top;
-            const x2 = childRect.left + childRect.width / 2 - svgRect.left;
-            const y2 = childRect.top - svgRect.top;
-
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            $(line).attr({ x1, y1, x2, y2, stroke: "black", "stroke-width": "1.5" });
-            $svg.append(line);
-            await sleep(DELAY);
+    class Fraction {
+        constructor(numerator, denominator = 1n) {
+            this.numerator = BigInt(numerator);
+            this.denominator = BigInt(denominator);
+            this.reduce();
         }
-    };
 
-    function splitNumber(number, nParts, i) {
-        let base = Math.pow(10, i);
+        reduce() {
+            const gcd = (a, b) => (b === 0n ? a : gcd(b, a % b));
+            let g = gcd(this.numerator < 0n ? -this.numerator : this.numerator, this.denominator);
+            this.numerator /= g;
+            this.denominator /= g;
+            if (this.denominator < 0n) {
+                this.numerator = -this.numerator;
+                this.denominator = -this.denominator;
+            }
+        }
+
+        add(other) {
+            return new Fraction(
+                this.numerator * other.denominator + other.numerator * this.denominator,
+                this.denominator * other.denominator
+            );
+        }
+
+        sub(other) {
+            return new Fraction(
+                this.numerator * other.denominator - other.numerator * this.denominator,
+                this.denominator * other.denominator
+            );
+        }
+
+        mul(other) {
+            return new Fraction(
+                this.numerator * other.numerator,
+                this.denominator * other.denominator
+            );
+        }
+
+        div(other) {
+            return new Fraction(
+                this.numerator * other.denominator,
+                this.denominator * other.numerator
+            );
+        }
+
+        equals(other) {
+            return this.numerator === other.numerator && this.denominator === other.denominator;
+        }
+
+        isZero() {
+            return this.numerator === 0n;
+        }
+
+        toBigInt() {
+            // Trunca a parte decimal
+            return this.numerator / this.denominator;
+        }
+
+        toNumber() {
+            return Number(this.numerator) / Number(this.denominator);
+        }
+
+        static fromNumber(num, precision = 1e9) {
+            // Converte um número JS float em Fraction aproximado
+            let denominator = BigInt(precision);
+            let numerator = BigInt(Math.round(num * precision));
+            return new Fraction(numerator, denominator);
+        }
+    }
+
+    // Função que inverte matriz, agora usando Fraction
+    function inversa_matriz(matriz) {
+        const tamanho = matriz.length;
+
+        // Matriz identidade com Fraction
+        let identidade = Array(tamanho)
+            .fill(null)
+            .map((_, i) =>
+                Array(tamanho)
+                    .fill(null)
+                    .map((__, j) => new Fraction(i === j ? 1n : 0n))
+            );
+
+        // Cópia da matriz original convertendo números para Fraction
+        let m = matriz.map((linha) => linha.map((x) => (x instanceof Fraction ? x : new Fraction(x))));
+
+        for (let i = 0; i < tamanho; i++) {
+            // Procurar pivô (não zero)
+            let piv = m[i][i];
+            if (piv.isZero()) {
+                let trocou = false;
+                for (let j = i + 1; j < tamanho; j++) {
+                    if (!m[j][i].isZero()) {
+                        [m[i], m[j]] = [m[j], m[i]];
+                        [identidade[i], identidade[j]] = [identidade[j], identidade[i]];
+                        piv = m[i][i];
+                        trocou = true;
+                        break;
+                    }
+                }
+                if (!trocou) throw new Error("Matriz singular, não possui inversa.");
+            }
+
+            // Normalizar linha do pivô (dividir pela pivô)
+            for (let k = 0; k < tamanho; k++) {
+                m[i][k] = m[i][k].div(piv);
+                identidade[i][k] = identidade[i][k].div(piv);
+            }
+
+            // Zerando coluna i nas outras linhas
+            for (let j = 0; j < tamanho; j++) {
+                if (j !== i) {
+                    let fator = m[j][i];
+                    for (let k = 0; k < tamanho; k++) {
+                        m[j][k] = m[j][k].sub(fator.mul(m[i][k]));
+                        identidade[j][k] = identidade[j][k].sub(fator.mul(identidade[i][k]));
+                    }
+                }
+            }
+        }
+
+        return identidade;
+    }
+
+    // Função para split number, igual ao seu original
+    function split_number(number, n_parts, i) {
+        let base = BigInt(10) ** BigInt(i);
         let parts = [];
-        for (let j = 0; j < nParts - 1; j++) {
-            parts.push(number % base);
-            number = Math.floor(number / base);
+        let num = BigInt(number);
+        for (let j = 0; j < n_parts - 1; j++) {
+            parts.push(num % base);
+            num /= base;
         }
-        parts.push(number);
+        parts.push(num);
         return parts.reverse();
     }
 
-    const toomCook3Visual = async (x, y, $container, parent = null) => {
-        const myId = "node-" + (nodeId++);
-        const $node = await newNodeElement(`ToomCook3(${x}, ${y})`, parent ? parent.attr("id") : null);
-        $node.find(".node").attr("id", myId);
+    // Função principal Toom-Cook W adaptada
+    function toom_cook_w(x, y, kx, ky) {
+        // 1.Divisão
+        x = BigInt(x);
+        y = BigInt(y);
 
-        if (x.toString().length <= 2 || y.toString().length <= 2) {
-            $node.find(".middle").text(`Caso Base: ${x} × ${y}`);
-            $node.find(".bottom").text(`${x * y}`);
-            $container.append($node);
-            await sleep(DELAY);
-            return x * y;
+        // Selecionar a Base
+        const base_i = Math.max(
+            Math.floor(Math.floor(Math.log10(Number(x))) / kx),
+            Math.floor(Math.floor(Math.log10(Number(y))) / ky)
+        ) + 1;
+
+        // Dividir os números
+        let p_x = split_number(x, kx, base_i).reverse();
+        let q_x = split_number(y, ky, base_i).reverse();
+
+        // 2.Avaliação
+
+        //Definir o grau do polinômio
+        const d = kx + ky - 1;
+
+        // Difinição dos pontos de avaliação
+        // 0, 1, -1, -2, inf
+        let x_possi = [new Fraction(0n), new Fraction(1n), new Fraction(-1n), new Fraction(-2n), 'inf'];
+
+        let x_vals = [];
+        for (let i = 0; i < d; i++) {
+            if (d === 1) {
+                x_vals[i] = new Fraction(1n);
+            } else if (i === d - 1) {
+                x_vals[i] = 'inf';
+            } else {
+                x_vals[i] = x_possi[i];
+            }
         }
 
-        // Calcula i
-        let i = Math.max(Math.floor(Math.log10(x) / 3), Math.floor(Math.log10(y) / 3)) + 1;
+        // Criar matriz de avaliação
+        const max_k = Math.max(kx, ky);
+        let mat = x_vals.map((v) => {
+            if (v === 'inf') {
+                return Array(max_k - 1).fill(new Fraction(0n)).concat([new Fraction(1n)]);
+            } else {
+                let row = [];
+                for (let ind = 0; ind < max_k; ind++) {
+                    // v^ind (potência de Fração)
+                    if (ind === 0) row.push(new Fraction(1n));
+                    else row.push(row[ind - 1].mul(v));
+                }
+                return row;
+            }
+        });
 
-        $node.find(".middle").append(`<br>i = ${i}`);
+        // Avaliação dos polinômios nos pontos x
+        const p = mat.map((row) =>
+            row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(p_x[col]))), new Fraction(0n))
+        );
+        const q = mat.map((row) =>
+            row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(q_x[col]))), new Fraction(0n))
+        );
 
-        // Base B = 10^i
-        const B = Math.pow(10, i);
-        $node.find(".middle").append(`<br>B = ${B}`);
-
-        // Dividir os números em 3 partes
-        const nParts = 3;
-        let X = splitNumber(x, nParts, i);
-        let Y = splitNumber(y, nParts, i);
-
-        $node.find(".middle").append(`<br>p(x) = ${X[0]}x² + ${X[1]}x + ${X[2]}`);
-        $node.find(".middle").append(`<br>q(x) = ${Y[0]}x² + ${Y[1]}x + ${Y[2]}`);
-
-        const $wrapper = $("<div>").append($node);
-        $container.append($wrapper);
-        await sleep(DELAY);
-
-        const $childrenDiv = $('<div class="children"></div>');
-        $wrapper.append($childrenDiv);
-        await sleep(DELAY);
-
-        // Avaliar os pontos
-        let p0 = X[2];
-        let p1 = X[2] + X[1] + X[0];
-        let p_1 = X[2] - X[1] + X[0];
-        let p_2 = X[2] - X[1] * 2 + 4 * X[0];
-        let pInf = X[0];
-
-        let q0 = Y[2];
-        let q1 = Y[2] + Y[1] + Y[0];
-        let q_1 = Y[2] - Y[1] + Y[0];
-        let q_2 = Y[2] - Y[1] * 2 + 4 * Y[0];
-        let qInf = Y[0];
-
-        // Multiplicar os pontos
-        let r0 = await toomCook3Visual(p0, q0, $childrenDiv, $node.find(".node"));
-        $node.find(".middle").append(`<br>r(0) = p(0)Xq(0) = ${p0} × ${p0} = ${r0}`);
-        let r1 = await toomCook3Visual(p1, q1, $childrenDiv, $node.find(".node"));
-        $node.find(".middle").append(`<br>r(1) = p(1)Xq(1) = ${p1} × ${p1} = ${r1}`);
-        let r_1 = await toomCook3Visual(p_1, q_1, $childrenDiv, $node.find(".node"));
-        $node.find(".middle").append(`<br>r(-1) = p(-1)Xq(-1) = ${p_1} × ${p_1} = ${r_1}`);
-        let r_2 = await toomCook3Visual(p_2, q_2, $childrenDiv, $node.find(".node"));
-        $node.find(".middle").append(`<br>r(-2) = p(-2)Xq(-2) = ${p_2} × ${p_2} = ${r_2}`);
-        let rInf = await toomCook3Visual(pInf, qInf, $childrenDiv, $node.find(".node"));
-        $node.find(".middle").append(`<br>r(Inf) = p(Inf)Xq(Inf) = ${pInf} × ${pInf} = ${rInf}`);
-
-
-        // Interpolação
-        let a0 = r0;
-        let a4 = rInf;
-        let a3 = (r_2 - r1) / 3;
-        let a1 = (r1 - r_1) / 2;
-        let a2 = r_1 - r0;
-
-        a3 = ((a2 - a3) / 2) + 2 * rInf;
-        a2 = a2 + a1 - a4;
-        a1 = a1 - a3;
-
-        $node.find(".middle").append(`<br> a0 = ${a0}, a1 = ${a1}, a2 = ${a2}, a3 = ${a3}, a4 = ${a4}`);
-        $node.find(".middle").append(`<br> r(x) = ${a4}x + ${a3}x³ + ${a2}x² + ${a1}x + ${a0} `);
-
-
-        // Recombinação
-        let base = Math.pow(10, i);
-        console.log(`base: ${base}`);
-
-        let result = BigInt(a4) * BigInt(Math.pow(base, 4)) +
-            BigInt(a3) * BigInt(Math.pow(base, 3)) +
-            BigInt(a2) * BigInt(Math.pow(base, 2)) +
-            BigInt(a1) * BigInt(base) +
-            BigInt(a0);
-        $node.find(".bottom").text(`${result}`);
-        await sleep(DELAY);
-
-        return result;
-    };
-
-
-
-    const buildToomTree = async () => {
-        const xInput = $("#mult1").val();
-        const yInput = $("#mult2").val();
-        if ($('#toomcook-form').hasClass('was-validated') &&  (xInput) && (yInput)) {
-            console.log(`xInput: ${xInput}`);
-            console.log(`yInput: ${yInput}`);
-            $('#toomcook-form').removeClass('was-validated');
-
-            const x = BigInt(xInput);
-            const y = BigInt(yInput);
-            const $tree = $("#tree");
-            const $lines = $("#lines");
-
-            $tree.html("");
-            $lines.html("");
-            nodeId = 0;
-
-            await sleep(DELAY);
-            await toomCook3Visual(x, y, $tree);
-            await sleep(DELAY);
-            await drawLines();
-
-        } else {
-            $('#toomcook-form').addClass('was-validated');
+        // 3. Multiplicação pontual
+        let r_x = [];
+        for (let i = 0; i < d; i++) {
+            r_x[i] = new Fraction(p[i].toBigInt() * q[i].toBigInt());
         }
 
-    };
+        // 4. Interpolação
 
-    $("#buildBtn").on("click", buildToomTree);
-    $("#xInput, #yInput").on("input", drawLines);
-    const observer = new ResizeObserver(() => drawLines());
-    observer.observe(document.getElementById("tree"));
+        // Matriz para interpolação
+        let r_mat = x_vals.map((v) => {
+            if (v === 'inf') {
+                return Array(d - 1).fill(new Fraction(0n)).concat([new Fraction(1n)]);
+            } else {
+                let row = [];
+                for (let ind = 0; ind < d; ind++) {
+                    if (ind === 0) row.push(new Fraction(1n));
+                    else row.push(row[ind - 1].mul(v));
+                }
+                return row;
+            }
+        });
+
+        // Inversão da matriz de interpolação
+        let r_mat_inv = inversa_matriz(r_mat);
+
+        // Cálculo do vetor r (coeficientes)
+        let r = r_mat_inv.map((row) =>
+            row.reduce((acc, val, col) => acc.add(val.mul(r_x[col])), new Fraction(0n))
+        );
+
+        // 5. Recomposição
+        let soma = new Fraction(0n);
+        for (let ind = 0; ind < r.length; ind++) {
+            soma = soma.add(r[ind].mul(new Fraction(BigInt(10) ** BigInt(base_i * ind))));
+        }
+
+        // Retorna inteiro (trunca parte decimal)
+        return soma.toBigInt();
+    }
+
+    // Teste básico
+    let resultado = toom_cook_w(
+        "1234567890123456789012",  // x (string ou BigInt)
+        "987654321987654321098",  // y (string ou BigInt)
+        1, // kx
+        1  // ky
+    );
+
+    console.log(resultado.toString());
 });
