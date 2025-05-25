@@ -1,12 +1,4 @@
 $(function () {
-    const DELAY = 300;
-    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    const steps = [];
-
-    function addStep(desc, matrices) {
-        // matrices: objeto { nomeDaMatriz: matrizArrayBidimensional }
-        steps.push({ desc, matrices });
-    }
 
     class Fraction {
         constructor(numerator, denominator = 1n) {
@@ -72,14 +64,23 @@ $(function () {
         }
 
         static fromNumber(num, precision = 1e9) {
-            // Converte um número JS float em Fraction aproximado
+            // Converte um nï¿½mero JS float em Fraction aproximado
             let denominator = BigInt(precision);
             let numerator = BigInt(Math.round(num * precision));
             return new Fraction(numerator, denominator);
         }
     }
 
-    // Função que inverte matriz, agora usando Fraction
+    const DELAY = 300;
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const steps = [];
+
+    function addStep(desc, matrices) {
+        // matrices: objeto { nomeDaMatriz: matrizArrayBidimensional }
+        steps.push({ desc, matrices });
+    }
+
+    // FunÃ§Ã£o que inverte matriz, agora usando Fraction
     function inversa_matriz(matriz) {
         const tamanho = matriz.length;
 
@@ -92,11 +93,11 @@ $(function () {
                     .map((__, j) => new Fraction(i === j ? 1n : 0n))
             );
 
-        // Cópia da matriz original convertendo números para Fraction
+        // CÃ³pia da matriz original convertendo nÃºmeros para Fraction
         let m = matriz.map((linha) => linha.map((x) => (x instanceof Fraction ? x : new Fraction(x))));
 
         for (let i = 0; i < tamanho; i++) {
-            // Procurar pivô (não zero)
+            // Procurar pivÃ´ (nÃ£o zero)
             let piv = m[i][i];
             if (piv.isZero()) {
                 let trocou = false;
@@ -109,10 +110,10 @@ $(function () {
                         break;
                     }
                 }
-                if (!trocou) throw new Error("Matriz singular, não possui inversa.");
+                if (!trocou) throw new Error("Matriz singular, nÃ£o possui inversa.");
             }
 
-            // Normalizar linha do pivô (dividir pela pivô)
+            // Normalizar linha do pivÃ´ (dividir pela pivÃ´)
             for (let k = 0; k < tamanho; k++) {
                 m[i][k] = m[i][k].div(piv);
                 identidade[i][k] = identidade[i][k].div(piv);
@@ -133,7 +134,7 @@ $(function () {
         return identidade;
     }
 
-    // Função para split number, igual ao seu original
+    // FunÃ§Ã£o para split number, igual ao seu original
     function split_number(number, n_parts, i) {
         let base = BigInt(10) ** BigInt(i);
         let parts = [];
@@ -146,9 +147,9 @@ $(function () {
         return parts.reverse();
     }
 
-    // Função principal Toom-Cook W adaptada
+    // FunÃ§Ã£o principal Toom-Cook W adaptada
     function toom_cook_w(x, y, kx, ky) {
-        // 1.Divisão
+        // 1.DivisÃ£o
         x = BigInt(x);
         y = BigInt(y);
 
@@ -158,16 +159,16 @@ $(function () {
             Math.floor(Math.floor(Math.log10(Number(y))) / ky)
         ) + 1;
 
-        // Dividir os números
+        // Dividir os nÃºmeros
         let p_x = split_number(x, kx, base_i).reverse();
         let q_x = split_number(y, ky, base_i).reverse();
 
-        // 2.Avaliação
+        // 2.AvaliaÃ§Ã£o
 
-        //Definir o grau do polinômio
+        // Definir o grau do polinÃ´mio
         const d = kx + ky - 1;
 
-        // Difinição dos pontos de avaliação
+        // DefiniÃ§Ã£o dos pontos de avaliaÃ§Ã£o
         // 0, 1, -1, -2, inf
         let x_possi = [new Fraction(0n), new Fraction(1n), new Fraction(-1n), new Fraction(-2n), 'inf'];
 
@@ -182,7 +183,7 @@ $(function () {
             }
         }
 
-        // Criar matriz de avaliação
+        // Criar matriz de avaliaÃ§Ã£o
         const max_k = Math.max(kx, ky);
         let mat = x_vals.map((v) => {
             if (v === 'inf') {
@@ -190,7 +191,7 @@ $(function () {
             } else {
                 let row = [];
                 for (let ind = 0; ind < max_k; ind++) {
-                    // v^ind (potência de Fração)
+                    // v^ind (potÃªncia de FraÃ§Ã£o)
                     if (ind === 0) row.push(new Fraction(1n));
                     else row.push(row[ind - 1].mul(v));
                 }
@@ -198,7 +199,7 @@ $(function () {
             }
         });
 
-        // Avaliação dos polinômios nos pontos x
+        // AvaliaÃ§Ã£o dos polinÃ´mios nos pontos x
         const p = mat.map((row) =>
             row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(p_x[col]))), new Fraction(0n))
         );
@@ -206,15 +207,15 @@ $(function () {
             row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(q_x[col]))), new Fraction(0n))
         );
 
-        // 3. Multiplicação pontual
+        // 3. MultiplicaÃ§Ã£o pontual
         let r_x = [];
         for (let i = 0; i < d; i++) {
             r_x[i] = new Fraction(p[i].toBigInt() * q[i].toBigInt());
         }
 
-        // 4. Interpolação
+        // 4. InterpolaÃ§Ã£o
 
-        // Matriz para interpolação
+        // Matriz para interpolaÃ§Ã£o
         let r_mat = x_vals.map((v) => {
             if (v === 'inf') {
                 return Array(d - 1).fill(new Fraction(0n)).concat([new Fraction(1n)]);
@@ -228,15 +229,15 @@ $(function () {
             }
         });
 
-        // Inversão da matriz de interpolação
+        // InversÃ£o da matriz de interpolaÃ§Ã£o
         let r_mat_inv = inversa_matriz(r_mat);
 
-        // Cálculo do vetor r (coeficientes)
+        // CÃ¡lculo do vetor r (coeficientes)
         let r = r_mat_inv.map((row) =>
             row.reduce((acc, val, col) => acc.add(val.mul(r_x[col])), new Fraction(0n))
         );
 
-        // 5. Recomposição
+        // 5. RecomposiÃ§Ã£o
         let soma = new Fraction(0n);
         for (let ind = 0; ind < r.length; ind++) {
             soma = soma.add(r[ind].mul(new Fraction(BigInt(10) ** BigInt(base_i * ind))));
@@ -246,7 +247,7 @@ $(function () {
         return soma.toBigInt();
     }
 
-    // Teste básico
+    // Teste bÃ¡sico
     let resultado = toom_cook_w(
         "1234567890123456789012",  // x (string ou BigInt)
         "987654321987654321098",  // y (string ou BigInt)
