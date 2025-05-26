@@ -1,3 +1,46 @@
+const matricesArea = document.getElementById('matrices-area');
+const stepDescription = document.getElementById('step-description');
+
+const steps = [
+];
+
+let currentStep = 0;
+
+function drawMatrix(matrix, name) {
+  let html = `<table class="matrix"><caption>${name}</caption><tbody>`;
+  matrix.forEach(row => {
+    html += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+function showStep(stepIndex) {
+  const step = steps[stepIndex];
+  if (!step) return;
+
+  stepDescription.textContent = step.desc;
+
+  let matricesHtml = '';
+  for (const [name, matrix] of Object.entries(step.matrices)) {
+    matricesHtml += drawMatrix(matrix, name);
+  }
+  matricesArea.innerHTML = matricesHtml;
+}
+
+document.getElementById('continue').onclick = () => {
+  if (currentStep < steps.length - 1) {
+    currentStep++;
+    showStep(currentStep);
+  }
+};
+
+document.getElementById('reinicie').onclick = () => {
+  currentStep = 0;
+  showStep(currentStep);
+};
+
+
 $(function () {
 
     class Fraction {
@@ -40,6 +83,7 @@ $(function () {
         }
 
         div(other) {
+            if (other.numerator === 0n) throw new Error("Divisão por zero.");
             return new Fraction(
                 this.numerator * other.denominator,
                 this.denominator * other.numerator
@@ -71,27 +115,25 @@ $(function () {
         }
     }
 
-    const DELAY = 300;
-    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    const steps = [];
+    function adicionarPasso(descricao, matrizes = {}) {
+        const stepHtml = $('<div class="step"></div>');
+        stepHtml.append(`<p class="step-description">${descricao}</p>`);
 
-    function addStep(desc, matrices) {
-        // matrices: objeto { nomeDaMatriz: matrizArrayBidimensional }
-        steps.push({ desc, matrices });
-    }
+        for (const [nome, matriz] of Object.entries(matrizes)) {
+            const tabela = $(drawMatrix(matriz, nome));
+            stepHtml.append(tabela);
+        }
 
-    // Função que inverte matriz, agora usando Fraction
+        $('#matrices-area').append(stepHtml);
+    }   
+
+
     function inversa_matriz(matriz) {
         const tamanho = matriz.length;
-
         // Matriz identidade com Fraction
-        let identidade = Array(tamanho)
-            .fill(null)
-            .map((_, i) =>
-                Array(tamanho)
-                    .fill(null)
-                    .map((__, j) => new Fraction(i === j ? 1n : 0n))
-            );
+        let identidade = Array(tamanho).fill(null).map((_, i) =>
+            Array(tamanho).fill(null).map((__, j) => new Fraction(i === j ? 1n : 0n))
+        );
 
         // Cópia da matriz original convertendo números para Fraction
         let m = matriz.map((linha) => linha.map((x) => (x instanceof Fraction ? x : new Fraction(x))));
@@ -130,7 +172,6 @@ $(function () {
                 }
             }
         }
-
         return identidade;
     }
 
@@ -139,12 +180,11 @@ $(function () {
         let base = BigInt(10) ** BigInt(i);
         let parts = [];
         let num = BigInt(number);
-        for (let j = 0; j < n_parts - 1; j++) {
+        for (let j = 0; j < n_parts; j++) {
             parts.push(num % base);
             num /= base;
         }
-        parts.push(num);
-        return parts.reverse();
+        return parts;
     }
 
     // Função principal Toom-Cook W adaptada
@@ -155,36 +195,35 @@ $(function () {
 
         // Selecionar a Base
         const base_i = Math.max(
-            Math.floor(Math.floor(Math.log10(Number(x))) / kx),
-            Math.floor(Math.floor(Math.log10(Number(y))) / ky)
+            Math.floor(Math.log10(Number(x)) / kx),
+            Math.floor(Math.log10(Number(y)) / ky)
         ) + 1;
 
+        console.log(`Base de divisão: ${base_i}`);
+        
         // Dividir os números
-        let p_x = split_number(x, kx, base_i).reverse();
-        let q_x = split_number(y, ky, base_i).reverse();
-
+        let p_x = split_number(x, kx, base_i);
+        let q_x = split_number(y, ky, base_i);
+        
+        adicionarPasso("Dividindo os números em partes", {
+            "\\( P(x) \\)": [p_x.map(v => new Fraction(v).toBigInt())],
+            "\\( Q(x) \\)": [q_x.map(v => new Fraction(v).toBigInt())]
+        });
+        
         // 2.Avaliação
 
         // Definir o grau do polinômio
         const d = kx + ky - 1;
+        const max_k = Math.max(kx, ky);
 
         // Definição dos pontos de avaliação
         // 0, 1, -1, -2, inf
-        let x_possi = [new Fraction(0n), new Fraction(1n), new Fraction(-1n), new Fraction(-2n), 'inf'];
-
-        let x_vals = [];
-        for (let i = 0; i < d; i++) {
-            if (d === 1) {
-                x_vals[i] = new Fraction(1n);
-            } else if (i === d - 1) {
-                x_vals[i] = 'inf';
-            } else {
-                x_vals[i] = x_possi[i];
-            }
-        }
-
+        const x_vals = [new Fraction(0n), new Fraction(1n), new Fraction(-1n), new Fraction(-2n), 'inf'].slice(0, d);
+        
+        adicionarPasso("Dividindo os números em partes", {
+            "\\( X \\)": [x_vals.map(v => v instanceof Fraction ? v.toBigInt() : v)],
+        });
         // Criar matriz de avaliação
-        const max_k = Math.max(kx, ky);
         let mat = x_vals.map((v) => {
             if (v === 'inf') {
                 return Array(max_k - 1).fill(new Fraction(0n)).concat([new Fraction(1n)]);
@@ -192,8 +231,7 @@ $(function () {
                 let row = [];
                 for (let ind = 0; ind < max_k; ind++) {
                     // v^ind (potência de Fração)
-                    if (ind === 0) row.push(new Fraction(1n));
-                    else row.push(row[ind - 1].mul(v));
+                    row.push(ind === 0 ? new Fraction(1n) : row[ind - 1].mul(v));
                 }
                 return row;
             }
@@ -201,10 +239,10 @@ $(function () {
 
         // Avaliação dos polinômios nos pontos x
         const p = mat.map((row) =>
-            row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(p_x[col]))), new Fraction(0n))
+            row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(col < p_x.length ? p_x[col] : 0n))), new Fraction(0n))
         );
         const q = mat.map((row) =>
-            row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(q_x[col]))), new Fraction(0n))
+            row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(col < q_x.length ? q_x[col] : 0n))), new Fraction(0n))
         );
 
         // 3. Multiplicação pontual
@@ -222,8 +260,7 @@ $(function () {
             } else {
                 let row = [];
                 for (let ind = 0; ind < d; ind++) {
-                    if (ind === 0) row.push(new Fraction(1n));
-                    else row.push(row[ind - 1].mul(v));
+                    row.push(ind === 0 ? new Fraction(1n) : row[ind - 1].mul(v));
                 }
                 return row;
             }
@@ -247,12 +284,11 @@ $(function () {
         return soma.toBigInt();
     }
 
-    // Teste básico
     let resultado = toom_cook_w(
-        "1234567890123456789012",  // x (string ou BigInt)
-        "987654321987654321098",  // y (string ou BigInt)
-        1, // kx
-        1  // ky
+        "123123123423",
+        "56453221",	
+        3,
+        2
     );
 
     console.log(resultado.toString());

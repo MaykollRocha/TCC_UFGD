@@ -61,7 +61,7 @@
             <thead>
                 <tr>
                     <th class="text-start">
-                        <span>\(\textbf{TOOM-COOK-3}(X, Y, kx,ky)\)</span>
+                        <span>\(\textbf{TOOM-COOK-W}(X, Y, kx,ky)\)</span>
                     </th>
                 </tr>
             </thead>
