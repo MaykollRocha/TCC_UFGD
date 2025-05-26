@@ -1,119 +1,44 @@
-const matricesArea = document.getElementById('matrices-area');
-const stepDescription = document.getElementById('step-description');
-
-const steps = [
-];
-
-let currentStep = 0;
-
-function drawMatrix(matrix, name) {
-  let html = `<table class="matrix"><caption>${name}</caption><tbody>`;
-  matrix.forEach(row => {
-    html += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
-  });
-  html += '</tbody></table>';
-  return html;
-}
-
-function showStep(stepIndex) {
-  const step = steps[stepIndex];
-  if (!step) return;
-
-  stepDescription.textContent = step.desc;
-
-  let matricesHtml = '';
-  for (const [name, matrix] of Object.entries(step.matrices)) {
-    matricesHtml += drawMatrix(matrix, name);
-  }
-  matricesArea.innerHTML = matricesHtml;
-}
-
-document.getElementById('continue').onclick = () => {
-  if (currentStep < steps.length - 1) {
-    currentStep++;
-    showStep(currentStep);
-  }
-};
-
-document.getElementById('reinicie').onclick = () => {
-  currentStep = 0;
-  showStep(currentStep);
-};
-
-
 $(function () {
+    const matricesArea = document.getElementById('matrices-area');
+    const stepDescription = document.getElementById('step-description');
 
-    class Fraction {
-        constructor(numerator, denominator = 1n) {
-            this.numerator = BigInt(numerator);
-            this.denominator = BigInt(denominator);
-            this.reduce();
-        }
+    let steps = [];
 
-        reduce() {
-            const gcd = (a, b) => (b === 0n ? a : gcd(b, a % b));
-            let g = gcd(this.numerator < 0n ? -this.numerator : this.numerator, this.denominator);
-            this.numerator /= g;
-            this.denominator /= g;
-            if (this.denominator < 0n) {
-                this.numerator = -this.numerator;
-                this.denominator = -this.denominator;
-            }
-        }
+    let currentStep = 0;
 
-        add(other) {
-            return new Fraction(
-                this.numerator * other.denominator + other.numerator * this.denominator,
-                this.denominator * other.denominator
-            );
-        }
-
-        sub(other) {
-            return new Fraction(
-                this.numerator * other.denominator - other.numerator * this.denominator,
-                this.denominator * other.denominator
-            );
-        }
-
-        mul(other) {
-            return new Fraction(
-                this.numerator * other.numerator,
-                this.denominator * other.denominator
-            );
-        }
-
-        div(other) {
-            if (other.numerator === 0n) throw new Error("Divisão por zero.");
-            return new Fraction(
-                this.numerator * other.denominator,
-                this.denominator * other.numerator
-            );
-        }
-
-        equals(other) {
-            return this.numerator === other.numerator && this.denominator === other.denominator;
-        }
-
-        isZero() {
-            return this.numerator === 0n;
-        }
-
-        toBigInt() {
-            // Trunca a parte decimal
-            return this.numerator / this.denominator;
-        }
-
-        toNumber() {
-            return Number(this.numerator) / Number(this.denominator);
-        }
-
-        static fromNumber(num, precision = 1e9) {
-            // Converte um n�mero JS float em Fraction aproximado
-            let denominator = BigInt(precision);
-            let numerator = BigInt(Math.round(num * precision));
-            return new Fraction(numerator, denominator);
-        }
+    function drawMatrix(matrix, name) {
+        let html = `<table class="matrix"><caption>${name}</caption><tbody>`;
+        matrix.forEach(row => {
+            html += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+        });
+        html += '</tbody></table>';
+        return html;
     }
+
+    function showStep(stepIndex) {
+        const step = steps[stepIndex];
+        if (!step) return;
+
+        stepDescription.textContent = step.desc;
+
+        let matricesHtml = '';
+        for (const [name, matrix] of Object.entries(step.matrices)) {
+            matricesHtml += drawMatrix(matrix, name);
+        }
+        matricesArea.innerHTML = matricesHtml;
+    }
+
+    document.getElementById('continue').onclick = () => {
+        if (currentStep < steps.length - 1) {
+            currentStep++;
+            showStep(currentStep);
+        }
+    };
+
+    document.getElementById('reinicie').onclick = () => {
+        currentStep = 0;
+        showStep(currentStep);
+    };
 
     function adicionarPasso(descricao, matrizes = {}) {
         const stepHtml = $('<div class="step"></div>');
@@ -125,7 +50,7 @@ $(function () {
         }
 
         $('#matrices-area').append(stepHtml);
-    }   
+    }
 
 
     function inversa_matriz(matriz) {
@@ -199,17 +124,18 @@ $(function () {
             Math.floor(Math.log10(Number(y)) / ky)
         ) + 1;
 
-        console.log(`Base de divisão: ${base_i}`);
-        
         // Dividir os números
         let p_x = split_number(x, kx, base_i);
         let q_x = split_number(y, ky, base_i);
-        
-        adicionarPasso("Dividindo os números em partes", {
-            "\\( P(x) \\)": [p_x.map(v => new Fraction(v).toBigInt())],
-            "\\( Q(x) \\)": [q_x.map(v => new Fraction(v).toBigInt())]
+
+        steps.push({
+            desc: "Dividindo os números em partes",
+            matrices: {
+                "\\( P(x) \\)": [p_x.map(v => new Fraction(v).toBigInt())],
+                "\\( Q(x) \\)": [q_x.map(v => new Fraction(v).toBigInt())]
+            }
         });
-        
+
         // 2.Avaliação
 
         // Definir o grau do polinômio
@@ -219,9 +145,12 @@ $(function () {
         // Definição dos pontos de avaliação
         // 0, 1, -1, -2, inf
         const x_vals = [new Fraction(0n), new Fraction(1n), new Fraction(-1n), new Fraction(-2n), 'inf'].slice(0, d);
-        
-        adicionarPasso("Dividindo os números em partes", {
-            "\\( X \\)": [x_vals.map(v => v instanceof Fraction ? v.toBigInt() : v)],
+
+        steps.push({
+            desc: "Definindo os valores de X",
+            matrices: {
+                "\\( X \\)": [x_vals.map(v => v instanceof Fraction ? v.toBigInt() : v)],
+            }
         });
         // Criar matriz de avaliação
         let mat = x_vals.map((v) => {
@@ -236,7 +165,11 @@ $(function () {
                 return row;
             }
         });
-
+        steps.push({
+            desc: "matriz de avaliação", matrices: {
+                "\\( MatAval \\)": mat.map(row => row.map(val => val.toBigInt())),
+            }
+        });
         // Avaliação dos polinômios nos pontos x
         const p = mat.map((row) =>
             row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(col < p_x.length ? p_x[col] : 0n))), new Fraction(0n))
@@ -245,12 +178,23 @@ $(function () {
             row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(col < q_x.length ? q_x[col] : 0n))), new Fraction(0n))
         );
 
+        steps.push({
+            desc: "Avaliação dos polinômios nos pontos x", matrices: {
+                "\\( p_{result} \\)": [p.map(v => v.toBigInt())],
+                "\\( q_{result} \\)": [q.map(v => v.toBigInt())],
+            }
+        });
+    
         // 3. Multiplicação pontual
         let r_x = [];
         for (let i = 0; i < d; i++) {
             r_x[i] = new Fraction(p[i].toBigInt() * q[i].toBigInt());
         }
-
+        steps.push({
+            desc: "Multiplicação pontual", matrices: {
+                "\\( r_{x} \\)": [r_x.map(v => v.toBigInt())],
+            }
+        });
         // 4. Interpolação
 
         // Matriz para interpolação
@@ -266,29 +210,48 @@ $(function () {
             }
         });
 
+        steps.push({
+            desc: " Matriz para interpolação", matrices: {
+                "\\( Mat_{interpolação} \\)": r_mat.map(row => row.map(val => val.toBigInt())),
+            }
+        });
+
         // Inversão da matriz de interpolação
         let r_mat_inv = inversa_matriz(r_mat);
-
+        steps.push({
+            desc: "Inversa da Matriz para interpolação", matrices: {
+                "\\( Mat_{interpolação}^{-1} \\)": r_mat_inv.map(row => row.map(val => Number(val.toNumber().toFixed(2)))),
+            }
+        });
         // Cálculo do vetor r (coeficientes)
         let r = r_mat_inv.map((row) =>
             row.reduce((acc, val, col) => acc.add(val.mul(r_x[col])), new Fraction(0n))
         );
 
+        steps.push({
+            desc: "Cálculo do vetor r (coeficientes)", matrices: {
+                "\\( r_{(d-1)..0} \\)": [r.map(v => v.toBigInt())],
+            }
+        });
         // 5. Recomposição
         let soma = new Fraction(0n);
         for (let ind = 0; ind < r.length; ind++) {
             soma = soma.add(r[ind].mul(new Fraction(BigInt(10) ** BigInt(base_i * ind))));
         }
-
+        steps.push({
+            desc: "Recomposição", matrices: {
+                "\\( Resultado \\)": [[soma.toBigInt()]],
+            }
+        });
         // Retorna inteiro (trunca parte decimal)
         return soma.toBigInt();
     }
 
     let resultado = toom_cook_w(
-        "123123123423",
-        "56453221",	
+        "1234567890123456789012 ",
+        "987654321987654321098",
         3,
-        2
+        3
     );
 
     console.log(resultado.toString());

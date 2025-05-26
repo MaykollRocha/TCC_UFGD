@@ -127,4 +127,5 @@
 
 </div>
 
+<script src="/static/app/js/toomcook/Fraction.js"></script>
 <script src="/static/app/js/toomcook/script.js"></script>
