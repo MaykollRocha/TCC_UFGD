@@ -43,9 +43,13 @@ $(function () {
         stepDescription.innerHTML = step.desc;
 
         let contentHtml = '';
-
+        // 🔥 Caso não tenha matriz, mas queira destacar linhas avulsas
+        if (step.text) {
+            contentHtml += `<div class="simple-text">${step.text}</div>`;
+        }
         // Verifica se há matrizes
         if (step.matrices) {
+            contentHtml += '<div syle="flex-direction: column;">';
             for (const [name, matrixObj] of Object.entries(step.matrices)) {
                 let matrix, highlightRows = [];
 
@@ -64,11 +68,7 @@ $(function () {
 
                 contentHtml += drawMatrix(matrix, name, combinedHighlightRows);
             }
-        }
-
-        // 🔥 Caso não tenha matriz, mas queira destacar linhas avulsas
-        if (step.text) {
-            contentHtml += `<div class="simple-text">${step.text}</div>`;
+             contentHtml += '</  div>';
         }
 
         // 🔥 Se não tiver matriz, mas quiser destacar linha "simulada"
@@ -81,9 +81,7 @@ $(function () {
         if (window.MathJax) {
             MathJax.typesetPromise();
         }
-}
-
-
+    }
 
 
     $('#continue').on('click', function () {
@@ -157,43 +155,44 @@ $(function () {
         return parts;
     }
 
-     // Montar string polinomial p(x) e q(x)
+    // Montar string polinomial p(x) e q(x)
     function polyToString(coeffs, varName = 'x') {
         // Inverter para maior expoente à esquerda
         const reversed = [...coeffs].reverse();
         return 'p(' + varName + ') = ' + reversed
-        .map((v, i) => {
-            const exp = reversed.length - i - 1;
-            let coefStr = v.toString();
-            if (coefStr === '0') return null;
-            let term = '';
-            if (coefStr === '1' && exp !== 0) {
-            term = '';
-            } else if (coefStr === '-1' && exp !== 0) {
-            term = '-';
-            } else {
-            term = coefStr;
-            }
-            if (exp === 0) return term;
-            if (exp === 1) return term + varName;
-            return term + varName + '^' + exp;
-        })
-        .filter(Boolean)
-        .join(' + ')
-        .replace(/\+\s\-/g, '- ');
+            .map((v, i) => {
+                const exp = reversed.length - i - 1;
+                let coefStr = v.toString();
+                if (coefStr === '0') return null;
+                let term = '';
+                if (coefStr === '1' && exp !== 0) {
+                    term = '';
+                } else if (coefStr === '-1' && exp !== 0) {
+                    term = '-';
+                } else {
+                    term = coefStr;
+                }
+                if (exp === 0) return term;
+                if (exp === 1) return term + varName;
+                return term + varName + '^' + exp;
+            })
+            .filter(Boolean)
+            .join(' + ')
+            .replace(/\+\s\-/g, '- ');
     }
 
     // Função principal Toom-Cook W adaptada
     function toom_cook_w(x, y) {
         // Definir kx e ky
-        const kx = Math.min(Math.max(Math.ceil(x.length / 10), 1), 3);
-        const ky = Math.min(Math.max(Math.ceil(y.length / 10), 1), 3);
+        const kx = Math.min(Math.max(Math.floor(x.length / 10), 1), 3);
+        const ky = Math.min(Math.max(Math.floor(y.length / 10), 1), 3);
 
         steps.push({
-            desc: "Definição das bases kx e ky",
-            text: ` \\(  k_x  \\gets \\min(\\max( \\lceil ${x.length} / 10 \\rceil , 1), 3), k_y \\gets \\min(\\max( \\lceil ${y.length} / 10 \\rceil , 1), 3)  \\) <br>
-                    \\(  k_x  \\gets \\min(\\max( ${Math.ceil(x.length / 10)}  , 1), 3), k_y \\gets \\min(\\max( ${Math.ceil(y.length / 10)} , 1), 3)  \\) <br>
-                    \\(  k_x  \\gets \\min(${Math.max(Math.ceil(y.length / 10), 1)}, 3), k_y \\gets \\min(${Math.max(Math.ceil(y.length / 10), 1)}, 3)  \\) <br>
+            desc: "Definição dos dividendos para o expoente do \\( D_n\\) é o número de dígitos",
+            text: ` \\(  k_x  \\gets \\min(\\max( \\lfloor D_x / 10 \\rfloor , 1), 3), k_y \\gets \\min(\\max( \\lfloor D_y / 10 \\rfloor , 1), 3)  \\) <br>
+                    \\(  k_x  \\gets \\min(\\max( \\lfloor ${x.length} / 10 \\rfloor , 1), 3), k_y \\gets \\min(\\max( \\lfloor ${y.length} / 10 \\rfloor , 1), 3)  \\) <br>
+                    \\(  k_x  \\gets \\min(\\max( ${Math.floor(x.length / 10)}  , 1), 3), k_y \\gets \\min(\\max( ${Math.floor(y.length / 10)} , 1), 3)  \\) <br>
+                    \\(  k_x  \\gets \\min(${Math.max(Math.floor(y.length / 10), 1)}, 3), k_y \\gets \\min(${Math.max(Math.floor(y.length / 10), 1)}, 3)  \\) <br>
                     \\( k_x \\gets ${kx}, k_y \\gets ${ky} \\) `,
             highlightRows: ['linha0']
         });
@@ -209,12 +208,12 @@ $(function () {
         ) + 1;
 
         steps.push({
-            desc: "Definição do expente i da base",
+            desc: "Definição do expentoente da base numérica",
             text: ` \\( i \\gets \\max(\\lfloor \\log_{10}(${x}) / ${kx} \\rfloor, \\lfloor \\log_{10}(${y}) / ${ky} \\rfloor) + 1 \\)
-                    <br>\\( i \\gets \\max(\\lfloor ${Math.log10(Number(x))})/ ${kx} \\rfloor, \\lfloor (${Math.log10(Number(y)) } / ${ky} \\rfloor) + 1 \\)
+                    <br>\\( i \\gets \\max(\\lfloor ${Math.log10(Number(x))})/ ${kx} \\rfloor, \\lfloor (${Math.log10(Number(y))} / ${ky} \\rfloor) + 1 \\)
                     <br>\\( i \\gets \\max(\\lfloor ${Math.log10(Number(x)) / kx} \\rfloor , \\lfloor ${Math.log10(Number(y)) / ky} \\rfloor) + 1 \\)
-                    <br>\\( i \\gets \\max( ${ Math.floor(Math.log10(Number(x)) / kx) }  , ${ Math.floor(Math.log10(Number(y)) / ky) } ) + 1 \\)
-                    <br>\\( i \\gets ${Math.max( Math.floor(Math.log10(Number(x)) / kx)  , Math.floor(Math.log10(Number(y)) / ky) )} + 1 \\)
+                    <br>\\( i \\gets \\max( ${Math.floor(Math.log10(Number(x)) / kx)}  , ${Math.floor(Math.log10(Number(y)) / ky)} ) + 1 \\)
+                    <br>\\( i \\gets ${Math.max(Math.floor(Math.log10(Number(x)) / kx), Math.floor(Math.log10(Number(y)) / ky))} + 1 \\)
                     <br>\\( i \\gets ${base_i} \\)`,
             highlightRows: ['linha1']
         });
@@ -242,7 +241,7 @@ $(function () {
         const max_k = Math.max(kx, ky);
 
         steps.push({
-            desc: "Definindo os valores de d",
+            desc: "Definindo o grau do polinômio final",
             text: ` \\(d \\gets ${kx} + ${ky} - 1 \\)
                     <br> \\(d \\gets  ${d} \\)`,
             highlightRows: ['linha4']
@@ -273,7 +272,7 @@ $(function () {
             }
         });
         steps.push({
-            desc: "matriz de avaliação", 
+            desc: "matriz de avaliação",
             matrices: {
                 "\\( MatAval \\)": mat.map(row => row.map(val => val.toBigInt())),
             },
@@ -288,20 +287,20 @@ $(function () {
         );
 
         steps.push({
-            desc: "Avaliação dos polinômios nos pontos x", 
+            desc: "Avaliação dos polinômios nos pontos x",
             matrices: {
                 "\\( p_{result} \\)": [p.map(v => v.toBigInt())],
                 "\\( q_{result} \\)": [q.map(v => v.toBigInt())],
             }
         });
-    
+
         // 3. Multiplicação pontual
         let r_x = [];
         for (let i = 0; i < d; i++) {
             r_x[i] = new Fraction(p[i].toBigInt() * q[i].toBigInt());
         }
         steps.push({
-            desc: "Multiplicação pontual", 
+            desc: "Multiplicação pontual",
             matrices: {
                 "\\( r_{x} \\)": [r_x.map(v => v.toBigInt())],
             },
@@ -323,7 +322,7 @@ $(function () {
         });
 
         steps.push({
-            desc: " Matriz para interpolação", 
+            desc: " Matriz para interpolação",
             matrices: {
                 "\\( Mat_{interpolação} \\)": r_mat.map(row => row.map(val => val.toBigInt())),
             },
@@ -333,7 +332,7 @@ $(function () {
         // Inversão da matriz de interpolação
         let r_mat_inv = inversa_matriz(r_mat);
         steps.push({
-            desc: "Inversa da Matriz para interpolação", 
+            desc: "Inversa da Matriz para interpolação",
             matrices: {
                 "\\( Mat_{interpolação}^{-1} \\)": r_mat_inv.map(row => row.map(val => Number(val.toNumber().toFixed(2)))),
             }
@@ -341,10 +340,13 @@ $(function () {
         // Cálculo do vetor r (coeficientes)
         let r = r_mat_inv.map((row) =>
             row.reduce((acc, val, col) => acc.add(val.mul(r_x[col])), new Fraction(0n))
-        );
+        );  
 
+        console.log(r.map(v => v.toBigInt()));
+        let string_r = polyToString(r.map(v => v.toBigInt()), 'x');
         steps.push({
-            desc: "Cálculo do vetor r (coeficientes)", 
+            desc: `Cálculo do vetor r (coeficientes)`,
+            text: `\\( r(x) = ${string_r} \\)`,
             matrices: {
                 "\\( r_{(d-1)..0} \\)": [r.map(v => v.toBigInt())],
             },
@@ -356,17 +358,15 @@ $(function () {
             soma = soma.add(r[ind].mul(new Fraction(BigInt(10) ** BigInt(base_i * ind))));
         }
         steps.push({
-            desc: "Recomposição", 
-            matrices: {
-                "\\( Resultado \\)": [[soma.toBigInt()]],
-            },
+            desc: "Recomposição",
+            text: `\\( resultado \\gets ${soma.toBigInt()} \\) <br>`,
             highlightRows: ['linha10']
         });
         // Retorna inteiro (trunca parte decimal)
         return soma.toBigInt();
     }
 
-    $('#buildBtn').on('click', function() {
+    $('#buildBtn').on('click', function () {
         // Limpar passos anteriores
         steps = [];
         currentStep = 0;
@@ -375,20 +375,20 @@ $(function () {
         if ($('#mult1').val() || $('#mult2').val()) {
 
 
-        // Ler os inputs
-        const x = $('#mult1').val();
-        const y = $('#mult2').val();
-        const kx = Math.min(Math.max(Math.ceil(x.length / 10),1),3);
-        const ky = Math.min(Math.max(Math.ceil(y.length / 10),1),3);
-        // Executar o algoritmo
-        const resultado = toom_cook_w(x, y, kx, ky);
+            // Ler os inputs
+            const x = $('#mult1').val();
+            const y = $('#mult2').val();
+            const kx = Math.min(Math.max(Math.ceil(x.length / 10), 1), 3);
+            const ky = Math.min(Math.max(Math.ceil(y.length / 10), 1), 3);
+            // Executar o algoritmo
+            const resultado = toom_cook_w(x, y, kx, ky);
 
-        // Mostrar o primeiro passo
-        showStep(currentStep);
+            // Mostrar o primeiro passo
+            showStep(currentStep);
         } else {
             $('#toomcook-form').addClass('was-validated');
         }
-        
+
     });
 
 });

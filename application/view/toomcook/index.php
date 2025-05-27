@@ -51,7 +51,7 @@
             <!-- As matrizes desenhadas aqui -->
         </div>
 
-        <div id="step-description" style="width: 50%; min-height: 100px;margin-top: 1rem; background: #333; text-align: center; color: white; padding: 0.8rem; border-radius: 6px; min-height: 60px; font-size: 1.1rem;">
+        <div id="step-description" >
             <!-- Texto explicando o passo atual -->
         </div>
     </div>
@@ -68,7 +68,7 @@
             <tbody>
                 <tr id="linha0">
                     <td class="text-start">
-                        <span>\(k_x,k_y \gets \min(\max(\lceil D_x / 10 \rceil, 1), 3 ), \min(\max(\lceil D_y / 10 \rceil, 1), 3 )\)</span>
+                        <span>\(k_x,k_y \gets \min(\max(\lfloor D_x / 10 \rfloor, 1), 3 ), \min(\max(\lfloor D_y / 10 \rfloor, 1), 3 )\)</span>
                     </td>
                 </tr>
                 <tr id="linha1">
