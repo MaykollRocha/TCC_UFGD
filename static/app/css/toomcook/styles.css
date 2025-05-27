@@ -119,6 +119,20 @@ svg {
     height: 1000px;
 }
 
+#matrices-area{
+    width: 100%; 
+    margin: 0 auto;
+    min-height: 400px; 
+    background: white; 
+    color: black; 
+    padding: 1rem; 
+    text-align: center; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-direction: column;
+}
+
 .matrix {
   display: inline-block;
   margin: 0 1rem;
@@ -132,4 +146,12 @@ svg {
   font-family: monospace;
   font-size: 1rem;
   min-width: 30px;
+}
+
+.highlight {
+    background-color: #ffeb3b;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.4rem;
+    font-weight: bold;
+    color: #000;
 }

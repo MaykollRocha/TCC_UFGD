@@ -46,12 +46,12 @@
         </form>
     </div>
 
-    <div class="col-md-8 bg-primary text-white p-3 d-flex align-items-center justify-content-center">
-        <div id="matrices-area" style="width: 100%; min-height: 200px; background: white; color: black; padding: 1rem; border-radius: 8px; overflow-x: auto;" >
+    <div class="col-md-8 bg-primary text-white p-3 d-flex align-items-center justify-content-center flex-column">
+        <div id="matrices-area">
             <!-- As matrizes desenhadas aqui -->
         </div>
 
-        <div id="step-description" style="margin-top: 1rem; background: #333; color: white; padding: 0.8rem; border-radius: 6px; min-height: 60px; font-size: 1.1rem;">
+        <div id="step-description" style="width: 50%; min-height: 100px;margin-top: 1rem; background: #333; text-align: center; color: white; padding: 0.8rem; border-radius: 6px; min-height: 60px; font-size: 1.1rem;">
             <!-- Texto explicando o passo atual -->
         </div>
     </div>
@@ -61,11 +61,16 @@
             <thead>
                 <tr>
                     <th class="text-start">
-                        <span>\(\textbf{TOOM-COOK-W}(X, Y, kx,ky)\)</span>
+                        <span>\(\textbf{TOOM-COOK-W}(X, Y)\)</span>
                     </th>
                 </tr>
             </thead>
             <tbody>
+                <tr id="linha0">
+                    <td class="text-start">
+                        <span>\(k_x,k_y \gets \min(\max(\lceil D_x / 10 \rceil, 1), 3 ), \min(\max(\lceil D_y / 10 \rceil, 1), 3 )\)</span>
+                    </td>
+                </tr>
                 <tr id="linha1">
                     <td class="text-start">
                         <span>\(i \gets \max(\lfloor \log_{10}(X) / kx \rfloor, \lfloor \log_{10}(Y) / ky \rfloor) + 1\)</span>

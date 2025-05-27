@@ -1,57 +1,102 @@
 $(function () {
     const matricesArea = document.getElementById('matrices-area');
     const stepDescription = document.getElementById('step-description');
+    let linhaAnterior = null;
+
+    const highlightLine = (ids) => {
+        // Remove highlight from previous lines
+        if (linhaAnterior) {
+            (Array.isArray(linhaAnterior) ? linhaAnterior : [linhaAnterior]).forEach(id => {
+                $(`#${id}`).removeClass('highlight');
+            });
+        }
+        // Add highlight to new lines
+        if (ids) {
+            (Array.isArray(ids) ? ids : [ids]).forEach(id => {
+                $(`#${id}`).addClass('highlight');
+            });
+            linhaAnterior = ids;
+        } else {
+            linhaAnterior = null;
+        }
+    };
 
     let steps = [];
 
     let currentStep = 0;
 
-    function drawMatrix(matrix, name) {
+    function drawMatrix(matrix, name, highlightRows = []) {
         let html = `<table class="matrix"><caption>${name}</caption><tbody>`;
-        matrix.forEach(row => {
-            html += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+        matrix.forEach((row, rowIndex) => {
+            const highlightClass = highlightRows.includes(rowIndex) ? 'highlight' : '';
+            html += `<tr class="${highlightClass}">` + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
         });
         html += '</tbody></table>';
         return html;
     }
 
+
     function showStep(stepIndex) {
         const step = steps[stepIndex];
         if (!step) return;
 
-        stepDescription.textContent = step.desc;
+        stepDescription.innerHTML = step.desc;
 
-        let matricesHtml = '';
-        for (const [name, matrix] of Object.entries(step.matrices)) {
-            matricesHtml += drawMatrix(matrix, name);
+        let contentHtml = '';
+
+        // Verifica se há matrizes
+        if (step.matrices) {
+            for (const [name, matrixObj] of Object.entries(step.matrices)) {
+                let matrix, highlightRows = [];
+
+                if (Array.isArray(matrixObj)) {
+                    matrix = matrixObj;
+                } else {
+                    matrix = matrixObj.matrix;
+                    highlightRows = matrixObj.highlightRows || [];
+                }
+
+                // 🔥 Inclui também highlightRows do step, se houver
+                const combinedHighlightRows = [
+                    ...highlightRows,
+                    ...(step.highlightRows || [])
+                ];
+
+                contentHtml += drawMatrix(matrix, name, combinedHighlightRows);
+            }
         }
-        matricesArea.innerHTML = matricesHtml;
-    }
 
-    document.getElementById('continue').onclick = () => {
+        // 🔥 Caso não tenha matriz, mas queira destacar linhas avulsas
+        if (step.text) {
+            contentHtml += `<div class="simple-text">${step.text}</div>`;
+        }
+
+        // 🔥 Se não tiver matriz, mas quiser destacar linha "simulada"
+        if (step.highlightRows) {
+            highlightLine(step.highlightRows);
+        }
+
+        matricesArea.innerHTML = contentHtml;
+
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+}
+
+
+
+
+    $('#continue').on('click', function () {
         if (currentStep < steps.length - 1) {
             currentStep++;
             showStep(currentStep);
         }
-    };
+    });
 
-    document.getElementById('reinicie').onclick = () => {
+    $('#reinicie').on('click', function () {
         currentStep = 0;
         showStep(currentStep);
-    };
-
-    function adicionarPasso(descricao, matrizes = {}) {
-        const stepHtml = $('<div class="step"></div>');
-        stepHtml.append(`<p class="step-description">${descricao}</p>`);
-
-        for (const [nome, matriz] of Object.entries(matrizes)) {
-            const tabela = $(drawMatrix(matriz, nome));
-            stepHtml.append(tabela);
-        }
-
-        $('#matrices-area').append(stepHtml);
-    }
-
+    });
 
     function inversa_matriz(matriz) {
         const tamanho = matriz.length;
@@ -112,8 +157,47 @@ $(function () {
         return parts;
     }
 
+     // Montar string polinomial p(x) e q(x)
+    function polyToString(coeffs, varName = 'x') {
+        // Inverter para maior expoente à esquerda
+        const reversed = [...coeffs].reverse();
+        return 'p(' + varName + ') = ' + reversed
+        .map((v, i) => {
+            const exp = reversed.length - i - 1;
+            let coefStr = v.toString();
+            if (coefStr === '0') return null;
+            let term = '';
+            if (coefStr === '1' && exp !== 0) {
+            term = '';
+            } else if (coefStr === '-1' && exp !== 0) {
+            term = '-';
+            } else {
+            term = coefStr;
+            }
+            if (exp === 0) return term;
+            if (exp === 1) return term + varName;
+            return term + varName + '^' + exp;
+        })
+        .filter(Boolean)
+        .join(' + ')
+        .replace(/\+\s\-/g, '- ');
+    }
+
     // Função principal Toom-Cook W adaptada
-    function toom_cook_w(x, y, kx, ky) {
+    function toom_cook_w(x, y) {
+        // Definir kx e ky
+        const kx = Math.min(Math.max(Math.ceil(x.length / 10), 1), 3);
+        const ky = Math.min(Math.max(Math.ceil(y.length / 10), 1), 3);
+
+        steps.push({
+            desc: "Definição das bases kx e ky",
+            text: ` \\(  k_x  \\gets \\min(\\max( \\lceil ${x.length} / 10 \\rceil , 1), 3), k_y \\gets \\min(\\max( \\lceil ${y.length} / 10 \\rceil , 1), 3)  \\) <br>
+                    \\(  k_x  \\gets \\min(\\max( ${Math.ceil(x.length / 10)}  , 1), 3), k_y \\gets \\min(\\max( ${Math.ceil(y.length / 10)} , 1), 3)  \\) <br>
+                    \\(  k_x  \\gets \\min(${Math.max(Math.ceil(y.length / 10), 1)}, 3), k_y \\gets \\min(${Math.max(Math.ceil(y.length / 10), 1)}, 3)  \\) <br>
+                    \\( k_x \\gets ${kx}, k_y \\gets ${ky} \\) `,
+            highlightRows: ['linha0']
+        });
+
         // 1.Divisão
         x = BigInt(x);
         y = BigInt(y);
@@ -124,16 +208,31 @@ $(function () {
             Math.floor(Math.log10(Number(y)) / ky)
         ) + 1;
 
+        steps.push({
+            desc: "Definição do expente i da base",
+            text: ` \\( i \\gets \\max(\\lfloor \\log_{10}(${x}) / ${kx} \\rfloor, \\lfloor \\log_{10}(${y}) / ${ky} \\rfloor) + 1 \\)
+                    <br>\\( i \\gets \\max(\\lfloor ${Math.log10(Number(x))})/ ${kx} \\rfloor, \\lfloor (${Math.log10(Number(y)) } / ${ky} \\rfloor) + 1 \\)
+                    <br>\\( i \\gets \\max(\\lfloor ${Math.log10(Number(x)) / kx} \\rfloor , \\lfloor ${Math.log10(Number(y)) / ky} \\rfloor) + 1 \\)
+                    <br>\\( i \\gets \\max( ${ Math.floor(Math.log10(Number(x)) / kx) }  , ${ Math.floor(Math.log10(Number(y)) / ky) } ) + 1 \\)
+                    <br>\\( i \\gets ${Math.max( Math.floor(Math.log10(Number(x)) / kx)  , Math.floor(Math.log10(Number(y)) / ky) )} + 1 \\)
+                    <br>\\( i \\gets ${base_i} \\)`,
+            highlightRows: ['linha1']
+        });
         // Dividir os números
         let p_x = split_number(x, kx, base_i);
         let q_x = split_number(y, ky, base_i);
 
+        let string_p = polyToString(p_x, 'x');
+        let string_q = polyToString(q_x, 'x');
+
         steps.push({
             desc: "Dividindo os números em partes",
+            text: `\\(${string_p}\\)<br>\\(${string_q.replace('p(x)', 'q(x)')} \\)`,
             matrices: {
                 "\\( P(x) \\)": [p_x.map(v => new Fraction(v).toBigInt())],
                 "\\( Q(x) \\)": [q_x.map(v => new Fraction(v).toBigInt())]
-            }
+            },
+            highlightRows: ['linha2', 'linha3']
         });
 
         // 2.Avaliação
@@ -141,6 +240,13 @@ $(function () {
         // Definir o grau do polinômio
         const d = kx + ky - 1;
         const max_k = Math.max(kx, ky);
+
+        steps.push({
+            desc: "Definindo os valores de d",
+            text: ` \\(d \\gets ${kx} + ${ky} - 1 \\)
+                    <br> \\(d \\gets  ${d} \\)`,
+            highlightRows: ['linha4']
+        });
 
         // Definição dos pontos de avaliação
         // 0, 1, -1, -2, inf
@@ -150,7 +256,8 @@ $(function () {
             desc: "Definindo os valores de X",
             matrices: {
                 "\\( X \\)": [x_vals.map(v => v instanceof Fraction ? v.toBigInt() : v)],
-            }
+            },
+            highlightRows: ['linha5']
         });
         // Criar matriz de avaliação
         let mat = x_vals.map((v) => {
@@ -166,9 +273,11 @@ $(function () {
             }
         });
         steps.push({
-            desc: "matriz de avaliação", matrices: {
+            desc: "matriz de avaliação", 
+            matrices: {
                 "\\( MatAval \\)": mat.map(row => row.map(val => val.toBigInt())),
-            }
+            },
+            highlightRows: ['linha6', 'linha7']
         });
         // Avaliação dos polinômios nos pontos x
         const p = mat.map((row) =>
@@ -179,7 +288,8 @@ $(function () {
         );
 
         steps.push({
-            desc: "Avaliação dos polinômios nos pontos x", matrices: {
+            desc: "Avaliação dos polinômios nos pontos x", 
+            matrices: {
                 "\\( p_{result} \\)": [p.map(v => v.toBigInt())],
                 "\\( q_{result} \\)": [q.map(v => v.toBigInt())],
             }
@@ -191,9 +301,11 @@ $(function () {
             r_x[i] = new Fraction(p[i].toBigInt() * q[i].toBigInt());
         }
         steps.push({
-            desc: "Multiplicação pontual", matrices: {
+            desc: "Multiplicação pontual", 
+            matrices: {
                 "\\( r_{x} \\)": [r_x.map(v => v.toBigInt())],
-            }
+            },
+            highlightRows: ['linha8']
         });
         // 4. Interpolação
 
@@ -211,15 +323,18 @@ $(function () {
         });
 
         steps.push({
-            desc: " Matriz para interpolação", matrices: {
+            desc: " Matriz para interpolação", 
+            matrices: {
                 "\\( Mat_{interpolação} \\)": r_mat.map(row => row.map(val => val.toBigInt())),
-            }
+            },
+            highlightRows: ['linha9']
         });
 
         // Inversão da matriz de interpolação
         let r_mat_inv = inversa_matriz(r_mat);
         steps.push({
-            desc: "Inversa da Matriz para interpolação", matrices: {
+            desc: "Inversa da Matriz para interpolação", 
+            matrices: {
                 "\\( Mat_{interpolação}^{-1} \\)": r_mat_inv.map(row => row.map(val => Number(val.toNumber().toFixed(2)))),
             }
         });
@@ -229,9 +344,11 @@ $(function () {
         );
 
         steps.push({
-            desc: "Cálculo do vetor r (coeficientes)", matrices: {
+            desc: "Cálculo do vetor r (coeficientes)", 
+            matrices: {
                 "\\( r_{(d-1)..0} \\)": [r.map(v => v.toBigInt())],
-            }
+            },
+            highlightRows: ['linha10']
         });
         // 5. Recomposição
         let soma = new Fraction(0n);
@@ -239,20 +356,39 @@ $(function () {
             soma = soma.add(r[ind].mul(new Fraction(BigInt(10) ** BigInt(base_i * ind))));
         }
         steps.push({
-            desc: "Recomposição", matrices: {
+            desc: "Recomposição", 
+            matrices: {
                 "\\( Resultado \\)": [[soma.toBigInt()]],
-            }
+            },
+            highlightRows: ['linha10']
         });
         // Retorna inteiro (trunca parte decimal)
         return soma.toBigInt();
     }
 
-    let resultado = toom_cook_w(
-        "1234567890123456789012 ",
-        "987654321987654321098",
-        3,
-        3
-    );
+    $('#buildBtn').on('click', function() {
+        // Limpar passos anteriores
+        steps = [];
+        currentStep = 0;
+        matricesArea.innerHTML = '';
+        stepDescription.innerHTML = '';
+        if ($('#mult1').val() || $('#mult2').val()) {
 
-    console.log(resultado.toString());
+
+        // Ler os inputs
+        const x = $('#mult1').val();
+        const y = $('#mult2').val();
+        const kx = Math.min(Math.max(Math.ceil(x.length / 10),1),3);
+        const ky = Math.min(Math.max(Math.ceil(y.length / 10),1),3);
+        // Executar o algoritmo
+        const resultado = toom_cook_w(x, y, kx, ky);
+
+        // Mostrar o primeiro passo
+        showStep(currentStep);
+        } else {
+            $('#toomcook-form').addClass('was-validated');
+        }
+        
+    });
+
 });
