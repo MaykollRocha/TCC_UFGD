@@ -68,7 +68,7 @@ $(function () {
 
                 contentHtml += drawMatrix(matrix, name, combinedHighlightRows);
             }
-             contentHtml += '</  div>';
+            contentHtml += '</  div>';
         }
 
         // 🔥 Se não tiver matriz, mas quiser destacar linha "simulada"
@@ -83,6 +83,12 @@ $(function () {
         }
     }
 
+    $('#pause').on('change', function () {
+        if (this.checked) {
+            modo = 'pause';
+            $('#auto, #reinicie').prop('checked', false);
+        }
+    });
 
     $('#continue').on('click', function () {
         if (currentStep < steps.length - 1) {
@@ -94,6 +100,32 @@ $(function () {
     $('#reinicie').on('click', function () {
         currentStep = 0;
         showStep(currentStep);
+    });
+
+    // VariÃ¡vel para controlar o modo e o timer do modo auto
+    let modo = 'manual';
+    let autoTimer = null;
+
+    $('#auto').on('change', function () {
+        if (this.checked) {
+            modo = 'auto';
+
+            // Limpa qualquer timer anterior
+            if (autoTimer) clearInterval(autoTimer);
+
+            // AvanÃ§a automaticamente a cada 2 segundos
+            autoTimer = setInterval(function () {
+                if (modo !== 'auto' || currentStep >= steps.length - 1) {
+                    clearInterval(autoTimer);
+                    return;
+                }
+                currentStep++;
+                showStep(currentStep);
+            }, 1500);
+        } else {
+            modo = 'manual';
+            if (autoTimer) clearInterval(autoTimer);
+        }
     });
 
     function inversa_matriz(matriz) {
@@ -308,7 +340,7 @@ $(function () {
         });
         // 4. Interpolação
 
-        // Matriz para interpolação
+        // Matriz para interpolaÃÂ§ÃÂ£o
         let r_mat = x_vals.map((v) => {
             if (v === 'inf') {
                 return Array(d - 1).fill(new Fraction(0n)).concat([new Fraction(1n)]);
@@ -342,7 +374,7 @@ $(function () {
             row.reduce((acc, val, col) => acc.add(val.mul(r_x[col])), new Fraction(0n))
         );  
 
-        console.log(r.map(v => v.toBigInt()));
+        
         let string_r = polyToString(r.map(v => v.toBigInt()), 'x');
         steps.push({
             desc: `Cálculo do vetor r (coeficientes)`,
@@ -357,11 +389,28 @@ $(function () {
         for (let ind = 0; ind < r.length; ind++) {
             soma = soma.add(r[ind].mul(new Fraction(BigInt(10) ** BigInt(base_i * ind))));
         }
+
+        // Exibir cada termo da soma: r[ind] * 10^(base_i * ind)
+        let termos = r.map((coef, ind) => `${coef.toBigInt() * (BigInt(10) ** BigInt(base_i * ind))}`);
+        // Pega o maior termo da soma para definir o tamanho da string
+        const maiorTermo = termos.reduce((a, b) => (BigInt(a) > BigInt(b) ? a : b));
+        const underline = '_'.repeat(maiorTermo.toString().length);
+
+        steps.push({
+            desc: "Termos da recomposição",
+            text: `<div style="text-align: right;">` +
+            termos.map((t, i) => `\\(${t}\\)`).join('<br>') +
+            `<br>${underline}<br>\\(${soma.toBigInt()}\\)<br>` +
+            `</div>`,
+            highlightRows: ['linha10']
+        });
+    
         steps.push({
             desc: "Recomposição",
             text: `\\( resultado \\gets ${soma.toBigInt()} \\) <br>`,
             highlightRows: ['linha10']
         });
+    
         // Retorna inteiro (trunca parte decimal)
         return soma.toBigInt();
     }

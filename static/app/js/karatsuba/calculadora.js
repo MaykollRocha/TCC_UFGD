@@ -1,5 +1,4 @@
 $(function () {
-    let paused = false;
     let restart = false;
     let modo = 'pause';
     let linhaAnterior = null;
