@@ -1,89 +1,24 @@
 $(function () {
-    const matricesArea = document.getElementById('matrices-area');
-    const stepDescription = document.getElementById('step-description');
-    let linhaAnterior = null;
+    // Inicialização das variáveis
+    const matricesArea = $('#matrices-area')[0]; // usada para acessar mais rapidamente o elemento
+    const stepDescription = $('#step-description')[0]; // usada para acessar mais rapidamente o elemento
+    
+    let linhaAnterior = null; // Guarda as linhas destacadas anteriormente
+    let steps = []; // Array para armazenar os passos do algoritmo
+    let currentStep = 0; // Índice do passo atual
 
-    const highlightLine = (ids) => {
-        // Remove highlight from previous lines
-        if (linhaAnterior) {
-            (Array.isArray(linhaAnterior) ? linhaAnterior : [linhaAnterior]).forEach(id => {
-                $(`#${id}`).removeClass('highlight');
-            });
-        }
-        // Add highlight to new lines
-        if (ids) {
-            (Array.isArray(ids) ? ids : [ids]).forEach(id => {
-                $(`#${id}`).addClass('highlight');
-            });
-            linhaAnterior = ids;
-        } else {
-            linhaAnterior = null;
-        }
-    };
-
-    let steps = [];
-
-    let currentStep = 0;
-
-    function drawMatrix(matrix, name, highlightRows = []) {
-        let html = `<table class="matrix"><caption>${name}</caption><tbody>`;
-        matrix.forEach((row, rowIndex) => {
-            const highlightClass = highlightRows.includes(rowIndex) ? 'highlight' : '';
-            html += `<tr class="${highlightClass}">` + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
-        });
-        html += '</tbody></table>';
-        return html;
-    }
+    // Variável para controlar o modo e o timer do modo auto
+    let modo = 'manual';
+    let autoTimer = null;
 
 
-    function showStep(stepIndex) {
-        const step = steps[stepIndex];
-        if (!step) return;
-
-        stepDescription.innerHTML = step.desc;
-
-        let contentHtml = '';
-        // 🔥 Caso não tenha matriz, mas queira destacar linhas avulsas
-        if (step.text) {
-            contentHtml += `<div class="simple-text">${step.text}</div>`;
-        }
-        // Verifica se há matrizes
-        if (step.matrices) {
-            contentHtml += '<div syle="flex-direction: column;">';
-            for (const [name, matrixObj] of Object.entries(step.matrices)) {
-                let matrix, highlightRows = [];
-
-                if (Array.isArray(matrixObj)) {
-                    matrix = matrixObj;
-                } else {
-                    matrix = matrixObj.matrix;
-                    highlightRows = matrixObj.highlightRows || [];
-                }
-
-                // 🔥 Inclui também highlightRows do step, se houver
-                const combinedHighlightRows = [
-                    ...highlightRows,
-                    ...(step.highlightRows || [])
-                ];
-
-                contentHtml += drawMatrix(matrix, name, combinedHighlightRows);
-            }
-            contentHtml += '</  div>';
-        }
-
-        // 🔥 Se não tiver matriz, mas quiser destacar linha "simulada"
-        if (step.highlightRows) {
-            highlightLine(step.highlightRows);
-        }
-
-        matricesArea.innerHTML = contentHtml;
-
-        if (window.MathJax) {
-            MathJax.typesetPromise();
-        }
-    }
-
+    /**
+***********************************************************************************
+            Confuirações dos botões e eventos de interação
+***********************************************************************************
+    */
     $('#pause').on('change', function () {
+        modo = 'manual';
         if (this.checked) {
             modo = 'pause';
             $('#auto, #reinicie').prop('checked', false);
@@ -91,29 +26,39 @@ $(function () {
     });
 
     $('#continue').on('click', function () {
+        modo = 'manual';
+        $('#pause , #reinicie, #auto').prop('checked', false);
         if (currentStep < steps.length - 1) {
             currentStep++;
             showStep(currentStep);
         }
     });
 
-    $('#reinicie').on('click', function () {
-        currentStep = 0;
-        showStep(currentStep);
+    $('#rollback').on('click', function () {
+        modo = 'manual';
+        $('#pause, #reinicie, #auto').prop('checked', false);
+        if (currentStep > 0) {
+            currentStep--;
+            showStep(currentStep);
+        }
     });
 
-    // VariÃ¡vel para controlar o modo e o timer do modo auto
-    let modo = 'manual';
-    let autoTimer = null;
+    $('#reinicie').on('click', function () {
+        modo = 'manual';
+        currentStep = 0;
+        showStep(currentStep);
+        $('#pause, #reinicie, #auto').prop('checked', false);
+    });
 
     $('#auto').on('change', function () {
+        $('#pause, #reinicie').prop('checked', false);
         if (this.checked) {
             modo = 'auto';
 
             // Limpa qualquer timer anterior
             if (autoTimer) clearInterval(autoTimer);
 
-            // AvanÃ§a automaticamente a cada 2 segundos
+            // Avança automaticamente a cada 2 segundos
             autoTimer = setInterval(function () {
                 if (modo !== 'auto' || currentStep >= steps.length - 1) {
                     clearInterval(autoTimer);
@@ -127,6 +72,36 @@ $(function () {
             if (autoTimer) clearInterval(autoTimer);
         }
     });
+
+    $('#buildBtn').on('click', function () {
+        // Limpar passos anteriores
+        steps = [];
+        currentStep = 0;
+
+        matricesArea.innerHTML = '';
+        stepDescription.innerHTML = '';
+        
+
+        // Ler os inputs
+        const x = $('#mult1').val();
+        const y = $('#mult2').val();
+
+        if (x && y && !isNaN(x) && !isNaN(y)) {
+            $('#toomcook-form').addClass('was-validated');
+            // Percorre o algoritmo para poder gerar os passos
+            toom_cook_w(x, y);
+
+            showStep(currentStep);
+        } else {
+            $('#toomcook-form').addClass('was-validated');
+        }
+    });
+
+    /**
+***********************************************************************************
+            TOOM-COOK W Algorithm Implementation
+***********************************************************************************
+    */
 
     function inversa_matriz(matriz) {
         const tamanho = matriz.length;
@@ -187,33 +162,15 @@ $(function () {
         return parts;
     }
 
-    // Montar string polinomial p(x) e q(x)
-    function polyToString(coeffs, varName = 'x') {
-        // Inverter para maior expoente à esquerda
-        const reversed = [...coeffs].reverse();
-        return 'p(' + varName + ') = ' + reversed
-            .map((v, i) => {
-                const exp = reversed.length - i - 1;
-                let coefStr = v.toString();
-                if (coefStr === '0') return null;
-                let term = '';
-                if (coefStr === '1' && exp !== 0) {
-                    term = '';
-                } else if (coefStr === '-1' && exp !== 0) {
-                    term = '-';
-                } else {
-                    term = coefStr;
-                }
-                if (exp === 0) return term;
-                if (exp === 1) return term + varName;
-                return term + varName + '^' + exp;
-            })
-            .filter(Boolean)
-            .join(' + ')
-            .replace(/\+\s\-/g, '- ');
-    }
-
-    // Função principal Toom-Cook W adaptada
+    /**
+     * Realiza a multiplicação de dois inteiros grandes usando o algoritmo Toom-Cook (variante Toom-3.5).
+     * Esta função divide os números de entrada, avalia-os como polinômios, multiplica ponto a ponto,
+     * interpola o resultado e recompõe o produto final. Também registra cada etapa para fins educacionais.
+     *
+     * @param {bigint} x - O primeiro inteiro grande a ser multiplicado.
+     * @param {bigint} y - O segundo inteiro grande a ser multiplicado.
+     * @returns {bigint} O produto de x e y como BigInt.
+     */
     function toom_cook_w(x, y) {
         // Definir kx e ky
         const kx = Math.min(Math.max(Math.floor(x.length / 10), 1), 3);
@@ -394,13 +351,13 @@ $(function () {
         let termos = r.map((coef, ind) => `${coef.toBigInt() * (BigInt(10) ** BigInt(base_i * ind))}`);
         // Pega o maior termo da soma para definir o tamanho da string
         const maiorTermo = termos.reduce((a, b) => (BigInt(a) > BigInt(b) ? a : b));
-        const underline = '_'.repeat(maiorTermo.toString().length);
+        const underline = '-'.repeat(maiorTermo.toString().length);
 
         steps.push({
             desc: "Termos da recomposição",
-            text: `<div style="text-align: right;">` +
+            text: `<div style="text-align: right; margin-top:0; margin-bottom:0; padding-top:0; padding-bottom:0;">` +
             termos.map((t, i) => `\\(${t}\\)`).join('<br>') +
-            `<br>${underline}<br>\\(${soma.toBigInt()}\\)<br>` +
+            `<br><hr style="margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0;"><br>\\(${soma.toBigInt()}\\)<br>` +
             `</div>`,
             highlightRows: ['linha10']
         });
@@ -415,29 +372,144 @@ $(function () {
         return soma.toBigInt();
     }
 
-    $('#buildBtn').on('click', function () {
-        // Limpar passos anteriores
-        steps = [];
-        currentStep = 0;
-        matricesArea.innerHTML = '';
-        stepDescription.innerHTML = '';
-        if ($('#mult1').val() || $('#mult2').val()) {
-
-
-            // Ler os inputs
-            const x = $('#mult1').val();
-            const y = $('#mult2').val();
-            const kx = Math.min(Math.max(Math.ceil(x.length / 10), 1), 3);
-            const ky = Math.min(Math.max(Math.ceil(y.length / 10), 1), 3);
-            // Executar o algoritmo
-            const resultado = toom_cook_w(x, y, kx, ky);
-
-            // Mostrar o primeiro passo
-            showStep(currentStep);
+    /**
+***********************************************************************************
+            Funções para manipulação de matrizes e destaques
+***********************************************************************************
+    */
+    const highlightLine = (ids) => {
+        // Remove highlight from previous lines
+        if (linhaAnterior) {
+            (Array.isArray(linhaAnterior) ? linhaAnterior : [linhaAnterior]).forEach(id => {
+                $(`#${id}`).removeClass('highlight');
+            });
+        }
+        // Add highlight to new lines
+        if (ids) {
+            (Array.isArray(ids) ? ids : [ids]).forEach(id => {
+                $(`#${id}`).addClass('highlight');
+            });
+            linhaAnterior = ids;
         } else {
-            $('#toomcook-form').addClass('was-validated');
+            linhaAnterior = null;
+        }
+    };
+
+    function drawMatrix(matrix, name, highlightRows = []) {
+        let html = `<table class="matrix"><caption>${name}</caption><tbody>`;
+        matrix.forEach((row, rowIndex) => {
+            const highlightClass = highlightRows.includes(rowIndex) ? 'highlight' : '';
+            html += `<tr class="${highlightClass}">` + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+        });
+        html += '</tbody></table>';
+        return html;
+    }
+
+    /**
+     * Converte um array de coeficientes de polinômio em uma representação de string legível.
+     *
+     * @param {number[]} coeffs - Os coeficientes do polinômio, ordenados do menor para o maior grau.
+     * @param {string} [varName='x'] - O nome da variável a ser usado na string do polinômio.
+     * @returns {string} A representação em string do polinômio no formato "p(varName) = ...".
+     */
+    function polyToString(coeffs, varName = 'x') {
+        // Inverter para maior expoente à esquerda
+        const reversed = [...coeffs].reverse();
+        return 'p(' + varName + ') = ' + reversed
+            .map((v, i) => {
+                const exp = reversed.length - i - 1;
+                let coefStr = v.toString();
+                if (coefStr === '0') return null;
+                let term = '';
+                if (coefStr === '1' && exp !== 0) {
+                    term = '';
+                } else if (coefStr === '-1' && exp !== 0) {
+                    term = '-';
+                } else {
+                    term = coefStr;
+                }
+                if (exp === 0) return term;
+                if (exp === 1) return term + varName;
+                return term + varName + '^' + exp;
+            })
+            .filter(Boolean)
+            .join(' + ')
+            .replace(/\+\s\-/g, '- ');
+    }
+
+
+    /**
+***********************************************************************************
+            Função que exibe o passo do processo
+***********************************************************************************
+    */
+    /**
+     * Exibe o passo especificado do processo, atualizando a descrição, textos, matrizes e destaques na interface.
+     * Utiliza jQuery para manipulação do DOM e atualização dinâmica dos elementos.
+     *
+     * @param {number} stepIndex - Índice do passo a ser exibido na sequência de etapas.
+     *
+     * Dependências globais:
+     * - steps: Array contendo os objetos de cada passo, com possíveis propriedades:
+     *   - desc: Descrição do passo (HTML).
+     *   - text: Texto adicional (HTML).
+     *   - matrices: Objeto ou array de matrizes a serem exibidas.
+     *   - highlightRows: Array de índices de linhas a serem destacadas.
+     * - stepDescription: Seletor ou elemento onde a descrição do passo será exibida.
+     * - matricesArea: Seletor ou elemento onde as matrizes serão exibidas.
+     * - drawMatrix: Função para renderizar uma matriz em HTML.
+     * - highlightLine: Função para destacar linhas específicas.
+     * - window.MathJax (opcional): Se disponível, atualiza fórmulas matemáticas renderizadas.
+     */
+    function showStep(stepIndex) {
+        const step = steps[stepIndex];
+        if (!step) return;
+
+        // Usando jQuery para manipular o DOM
+        $(stepDescription).html(step.desc);
+
+        let $content = $('<div></div>');
+
+        // Caso tenha texto
+        if (step.text) {
+            $content.append($('<div class="simple-text"></div>').html(step.text));
         }
 
-    });
+        // Caso tenha matrizes
+        if (step.matrices) {
+            let $matricesDiv = $('<div style="flex-direction: column;"></div>');
+            $.each(step.matrices, function (name, matrixObj) {
+                let matrix, highlightRows = [];
 
+                if ($.isArray(matrixObj)) {
+                    matrix = matrixObj;
+                } else {
+                    matrix = matrixObj.matrix;
+                    highlightRows = matrixObj.highlightRows || [];
+                }
+
+                // Inclui também highlightRows do step, se houver
+                const combinedHighlightRows = [
+                    ...highlightRows,
+                    ...(step.highlightRows || [])
+                ];
+
+                $matricesDiv.append($(drawMatrix(matrix, name, combinedHighlightRows)));
+            });
+            $content.append($matricesDiv);
+        }
+
+        // Destacar linhas simuladas se necessário
+        if (step.highlightRows) {
+            highlightLine(step.highlightRows);
+        }
+
+        // Atualiza a área de matrizes usando jQuery
+        $(matricesArea).empty().append($content);
+
+        // Atualiza fórmulas matemáticas se MathJax estiver disponível
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
 });
