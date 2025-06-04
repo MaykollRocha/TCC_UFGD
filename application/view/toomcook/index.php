@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="/static/app/css/toomcook/styles.css">
 
 <div class="row g-3 justify-content-center">
-    <div class="col-10" id="inputs">
+    <div class="row mb-3 col-10" id="inputs">
         <form class="row g-3 needs-validation justify-content-center" id="toomcook-form" novalidate>
             <div class="col-md-4">
                 <label class="form-label required" for="mult1">Número 1</label>
@@ -53,7 +53,7 @@
             </div>
         </form>
     </div>
-
+    <div class="row">  
     <div class="col-md-8 bg-primary text-white p-3 d-flex align-items-center justify-content-center flex-column">
         <div id="matrices-area">
             <!-- As matrizes desenhadas aqui -->
@@ -137,7 +137,7 @@
             </tbody>
         </table>
     </div>
-
+    </div>
 </div>
 
 <?php

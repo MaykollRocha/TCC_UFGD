@@ -87,7 +87,7 @@
                 Nome Projeto
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu"
-                aria-controls="navbarMenu" aria-expanded="false" aria-label="Alternar navegação">
+                aria-controls="navbarMenu" aria-expanded="false" aria-label="Alternar navegaï¿½ï¿½o">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <?php
@@ -120,5 +120,4 @@
     </nav>
 
     <!-- Conte do principal -->
-    <main class="flex-shrink-0">
-        <div class="container-fluid">
+    <main class="container-fluid">
