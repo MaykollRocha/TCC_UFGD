@@ -46,6 +46,10 @@
                     </label>
 
                 </div>
+
+                <button type="button" class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center" id="configuracao" style="width: 48px; height: 48px;">
+                    <i class="bi bi-gear" style="font-size: 1.5rem;"></i>
+                </button>
             </div>
         </form>
     </div>
@@ -135,6 +139,10 @@
     </div>
 
 </div>
+
+<?php
+include_once __DIR__ . '\modal\configurações.php';
+?>
 
 <script src="/static/app/js/toomcook/Fraction.js"></script>
 <script src="/static/app/js/toomcook/script.js"></script>

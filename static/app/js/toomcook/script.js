@@ -10,7 +10,47 @@ $(function () {
     // Variável para controlar o modo e o timer do modo auto
     let modo = 'manual';
     let autoTimer = null;
+    
+    // Variáveis de configuração do algoritmo
+    let TIMEOUT = 1500; // Tempo de espera para o modo automático
+    let define_W = false; // Definie se o algoritmo vai definir o W ou o usuario 
+    let kx = 0; // Variável para o kx
+    let ky = 0; // Variável para o ky
 
+
+    $('#configuracao').on('click', function () {
+        // Exibir modal de configuração
+
+        $('#tempo').val(TIMEOUT);	
+        if (define_W) {
+            $('definir').prop('checked', true);
+            $('#kx').val(kx).prop('disabled', false);
+            $('#ky').val(ky).prop('disabled', false);;
+        } else {
+            $('#definir').prop('checked', false);
+            $('#kx').val(kx).prop('disabled', true);
+            $('#ky').val(ky).prop('disabled', true);
+        }
+
+        $('#modal-config').modal('show');
+    });
+
+    $('#definir').on('change', function () {
+        if (this.checked) {
+            $('#kx, #ky').prop('disabled', false);
+        } else {
+            $('#kx, #ky').prop('disabled', true);
+        }
+    });
+
+    $('#atualizar').on('click', function () {
+        define_W = $('#definir').prop('checked');
+        kx = Number($('#kx').val());
+        ky = Number($('#ky').val());
+        TIMEOUT = $('#tempo').val();
+
+        $('#modal-config').modal('hide');
+    });
 
     /**
 ***********************************************************************************
@@ -66,7 +106,7 @@ $(function () {
                 }
                 currentStep++;
                 showStep(currentStep);
-            }, 1500);
+            }, TIMEOUT);
         } else {
             modo = 'manual';
             if (autoTimer) clearInterval(autoTimer);
@@ -173,18 +213,27 @@ $(function () {
      */
     function toom_cook_w(x, y) {
         // Definir kx e ky
-        const kx = Math.min(Math.max(Math.floor(x.length / 10), 1), 3);
-        const ky = Math.min(Math.max(Math.floor(y.length / 10), 1), 3);
+        if (!define_W) {
+            kx = Math.min(Math.max(Math.floor(x.length / 10), 1), 3);
+            ky = Math.min(Math.max(Math.floor(y.length / 10), 1), 3);
 
-        steps.push({
-            desc: "Definição dos dividendos para o expoente do \\( D_n\\) é o número de dígitos",
-            text: ` \\(  k_x  \\gets \\min(\\max( \\lfloor D_x / 10 \\rfloor , 1), 3), k_y \\gets \\min(\\max( \\lfloor D_y / 10 \\rfloor , 1), 3)  \\) <br>
-                    \\(  k_x  \\gets \\min(\\max( \\lfloor ${x.length} / 10 \\rfloor , 1), 3), k_y \\gets \\min(\\max( \\lfloor ${y.length} / 10 \\rfloor , 1), 3)  \\) <br>
-                    \\(  k_x  \\gets \\min(\\max( ${Math.floor(x.length / 10)}  , 1), 3), k_y \\gets \\min(\\max( ${Math.floor(y.length / 10)} , 1), 3)  \\) <br>
-                    \\(  k_x  \\gets \\min(${Math.max(Math.floor(y.length / 10), 1)}, 3), k_y \\gets \\min(${Math.max(Math.floor(y.length / 10), 1)}, 3)  \\) <br>
-                    \\( k_x \\gets ${kx}, k_y \\gets ${ky} \\) `,
-            highlightRows: ['linha0']
-        });
+            steps.push({
+                desc: "Definição dos dividendos para o expoente do \\( D_n\\) é o número de dígitos",
+                text: ` \\(  k_x  \\gets \\min(\\max( \\lfloor D_x / 10 \\rfloor , 1), 3), k_y \\gets \\min(\\max( \\lfloor D_y / 10 \\rfloor , 1), 3)  \\) <br>
+                        \\(  k_x  \\gets \\min(\\max( \\lfloor ${x.length} / 10 \\rfloor , 1), 3), k_y \\gets \\min(\\max( \\lfloor ${y.length} / 10 \\rfloor , 1), 3)  \\) <br>
+                        \\(  k_x  \\gets \\min(\\max( ${Math.floor(x.length / 10)}  , 1), 3), k_y \\gets \\min(\\max( ${Math.floor(y.length / 10)} , 1), 3)  \\) <br>
+                        \\(  k_x  \\gets \\min(${Math.max(Math.floor(y.length / 10), 1)}, 3), k_y \\gets \\min(${Math.max(Math.floor(y.length / 10), 1)}, 3)  \\) <br>
+                        \\( k_x \\gets ${kx}, k_y \\gets ${ky} \\) `,
+                highlightRows: ['linha0']
+            });
+        } else {
+            steps.push({
+                desc: "Definição dos dividendos foi feita pela configuração",
+                text: ` \\( k_x \\gets ${kx}, k_y \\gets ${ky} \\) `,
+                highlightRows: ['linha0']
+            });
+        }
+        
 
         // 1.Divisão
         x = BigInt(x);
@@ -271,9 +320,12 @@ $(function () {
         const p = mat.map((row) =>
             row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(col < p_x.length ? p_x[col] : 0n))), new Fraction(0n))
         );
+        console.log(p);
+
         const q = mat.map((row) =>
             row.reduce((acc, val, col) => acc.add(val.mul(new Fraction(col < q_x.length ? q_x[col] : 0n))), new Fraction(0n))
         );
+
 
         steps.push({
             desc: "Avaliação dos polinômios nos pontos x",
@@ -285,6 +337,7 @@ $(function () {
 
         // 3. Multiplicação pontual
         let r_x = [];
+        console.log(d);
         for (let i = 0; i < d; i++) {
             r_x[i] = new Fraction(p[i].toBigInt() * q[i].toBigInt());
         }
@@ -297,7 +350,7 @@ $(function () {
         });
         // 4. Interpolação
 
-        // Matriz para interpolaÃÂ§ÃÂ£o
+        // Matriz para interpolaçã£o
         let r_mat = x_vals.map((v) => {
             if (v === 'inf') {
                 return Array(d - 1).fill(new Fraction(0n)).concat([new Fraction(1n)]);
