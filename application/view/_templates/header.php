@@ -62,7 +62,7 @@
 
         /* O conteúdo principal deve ocupar o espaço restante sem ultrapassar o footer */
         main {
-            flex-grow: 1;
+            background-color: antiquewhite;
         }
 
         /* O rodapé deve ficar fixo no fundo */
@@ -79,7 +79,6 @@
 </head>
 
 <body>
-
     <!-- Navbar fixa no topo -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
         <div class="container-fluid">

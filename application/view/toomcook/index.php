@@ -27,7 +27,7 @@
                     </button>
 
                     <button type="button" class="btn btn-danger" id="rollback">
-                        <i class="bi bi-caret-right-fill" style="transform: rotate(180deg); display: inline-block;"></i>
+                        <i class="bi bi-caret-left-fill" ></i>
                     </button>
 
                     <input type="radio" class="btn-check" name="options" id="pause" autocomplete="off">
